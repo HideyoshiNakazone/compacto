@@ -1,7 +1,7 @@
-from dataclasses import dataclass
-
 from compacto.internal_types import HasAnnotations, TreeNode
 
+import typing
+from dataclasses import dataclass
 from typing import TypeVar, get_type_hints
 
 
@@ -24,6 +24,11 @@ class FieldsDeff:
 StructTyping = StructDeff | FieldsDeff
 
 
+def get_origin_type(field_type: type) -> type:
+    """Unwrap generic aliases like list[int] → list."""
+    return typing.get_origin(field_type) or field_type
+
+
 def struct_parser(obj_or_clzz: T | type[T]) -> TreeNode[StructTyping]:
     clzz = obj_or_clzz if isinstance(obj_or_clzz, type) else type(obj_or_clzz)
 
@@ -44,13 +49,12 @@ def struct_parser(obj_or_clzz: T | type[T]) -> TreeNode[StructTyping]:
         StructDeff(name=clzz.__name__, native_type=clzz, fields=annotated_fields)
     )
     for field, field_type in annotated_fields.items():
-        if getattr(field_type, '__module__', None) == 'builtins':
+        origin = get_origin_type(field_type)
+        if origin.__module__ == "builtins":
             struct_node.add_child(
                 TreeNode.new(FieldsDeff(name=field, field_type=field_type))
             )
         else:
-            struct_node.add_child(
-                struct_parser(clzz)
-            )
+            struct_node.add_child(struct_parser(clzz))
 
     return struct_node

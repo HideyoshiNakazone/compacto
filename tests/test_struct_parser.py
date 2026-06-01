@@ -1,4 +1,4 @@
-from compacto.struct_parser import struct_parser, StructDeff, FieldsDeff
+from compacto.struct_parser import FieldsDeff, StructDeff, struct_parser
 
 import pytest
 

@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Generic, Protocol, Self, TypeVar
+from typing import Generic, Iterator, Protocol, Self, TypeVar
 
 
 class HasAnnotations(Protocol):
@@ -7,6 +7,7 @@ class HasAnnotations(Protocol):
 
 
 V = TypeVar("V")
+
 
 @dataclass
 class TreeNode(Generic[V]):
@@ -21,3 +22,8 @@ class TreeNode(Generic[V]):
     def add_child(self, child: Self) -> None:
         child.parent = self
         self.children.append(child)
+
+    def __iter__(self) -> Iterator[V]:
+        yield self.data
+        for child in self.children:
+            yield from child
