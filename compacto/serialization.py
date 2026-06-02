@@ -1,3 +1,4 @@
+from compacto.encoding import IntEncoder, StringEncoder
 from compacto.internal_types import HasAnnotations
 from compacto.struct_parser import StructDeff, struct_parser
 
@@ -18,12 +19,10 @@ def pack(obj: T) -> bytes:
             continue
 
         if node.field_type is int:
-            data += struct.pack("i", getattr(obj, node.name))
+            data += IntEncoder.encode(getattr(obj, node.name))
 
         if node.field_type is str:
-            encoded_str = getattr(obj, node.name).encode("utf-8")
-            data += struct.pack("I", len(encoded_str))  # length prefix
-            data += encoded_str
+            data += StringEncoder.encode(getattr(obj, node.name))
 
         if node.field_type is bool:
             data += struct.pack("?", getattr(obj, node.name))
@@ -49,15 +48,14 @@ def unpack(clzz: type[T], data: bytes) -> T:
             continue
 
         if node.field_type is int:
-            (value,) = struct.unpack_from("i", data, offset)
-            offset += struct.calcsize("i")
+            value, var_offset = IntEncoder.decode(data[offset:])
+            offset += var_offset
             fields[node.name] = value
 
         elif node.field_type is str:
-            (length,) = struct.unpack_from("I", data, offset)
-            offset += struct.calcsize("I")
-            fields[node.name] = data[offset : offset + length].decode("utf-8")
-            offset += length
+            value, var_offset = StringEncoder.decode(data[offset:])
+            offset += var_offset
+            fields[node.name] = value
 
         elif node.field_type is bool:
             (value,) = struct.unpack_from("?", data, offset)

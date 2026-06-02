@@ -21,7 +21,9 @@ classifiers = [
 ]
 license = "MIT"
 readme = "README.md"
-dependencies = []
+dependencies = [
+    "typing-extensions>=4.15.0",
+]
 
 
 # Build System
@@ -34,6 +36,7 @@ build-backend = "hatchling.build"
 
 [dependency-groups]
 dev = [
+    "coverage>=7.14.1",
     "pytest>=9.0.3",
     "ruff>=0.15.15",
 ]
@@ -51,7 +54,7 @@ omit = [
 extend-select = ["I"]
 
 [tool.ruff.lint.isort]
-known-first-party = ["jambo"]
+known-first-party = ["compacto"]
 section-order=[
     "future",
     "first-party",
