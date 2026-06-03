@@ -2,6 +2,8 @@ from compacto.encoding import IntEncoder, StringEncoder
 from compacto.internal_types import HasAnnotations
 from compacto.struct_parser import StructDeff, struct_parser
 
+from encoding import BoolEncoder
+
 import struct
 from typing import TypeVar
 
@@ -25,7 +27,7 @@ def pack(obj: T) -> bytes:
             data += StringEncoder.encode(getattr(obj, node.name))
 
         if node.field_type is bool:
-            data += struct.pack("?", getattr(obj, node.name))
+            data += BoolEncoder.encode(getattr(obj, node.name))
 
         if node.field_type is float:
             data += struct.pack("f", getattr(obj, node.name))
@@ -58,8 +60,8 @@ def unpack(clzz: type[T], data: bytes) -> T:
             fields[node.name] = value
 
         elif node.field_type is bool:
-            (value,) = struct.unpack_from("?", data, offset)
-            offset += struct.calcsize("?")
+            value, var_offset = BoolEncoder.decode(data[offset:])
+            offset += var_offset
             fields[node.name] = value
 
         elif node.field_type is float:
