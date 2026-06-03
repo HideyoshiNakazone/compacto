@@ -1,4 +1,4 @@
-from encoding.int_encoder import IntEncoder
+from compacto.encoding.int_encoder import IntEncoder
 
 
 class TestIntEncoder:

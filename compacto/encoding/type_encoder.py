@@ -18,10 +18,22 @@ class TypeEncoder(Protocol[T]):
     __encoders__: dict[type, Self] = {}
 
     @staticmethod
-    def encode(value: T) -> bytes: ...
+    def encode(value: T) -> bytes:
+        """
+        Encode a value to bytes.
+        :param value: value to encode
+        :return: byte encoded value
+        """
+        ...
 
     @staticmethod
-    def decode(data: bytes) -> Tuple[T, int]: ...
+    def decode(data: bytes) -> Tuple[T, int]:
+        """
+        Decoder implementation per type
+        :param data: byte encoded data
+        :return: Tuple of (decoded value, number of bytes consumed)
+        """
+        ...
 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
@@ -33,4 +45,4 @@ class TypeEncoder(Protocol[T]):
     def get_implementation(cls, type_: type) -> Self:
         if encoder := cls.__encoders__.get(type_, None):
             return encoder
-        raise TypeError(f"No encoder found for type {type_}")
+        raise TypeError(f"No encoder found for type {type_.__name__}")

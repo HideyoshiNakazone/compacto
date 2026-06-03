@@ -1,6 +1,5 @@
 from compacto.encoding.type_encoder import TypeEncoder
-
-from utils.constants import LONG_LONG_TYPE_TOKEN, SIZE_LONG_LONG
+from compacto.utils.constants import LONG_LONG_TYPE_TOKEN, SIZE_LONG_LONG
 
 import struct
 from typing import Tuple

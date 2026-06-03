@@ -1,4 +1,4 @@
-from encoding.string_encoder import StringEncoder
+from compacto.encoding.string_encoder import StringEncoder
 
 
 class TestStringEncoder:
