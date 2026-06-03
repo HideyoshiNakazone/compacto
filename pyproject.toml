@@ -25,6 +25,13 @@ dependencies = [
     "typing-extensions>=4.15.0",
 ]
 
+# POE Tasks
+[tool.poe.tasks]
+create-hooks        = "bash .githooks/set-hooks.sh"
+tests               = "pytest -vv"
+tests-report        = "pytest -v --cov --cov-branch --cov-report=xml"
+type-check          = "mypy compacto"
+
 
 # Build System
 [tool.hatch.version]
@@ -37,6 +44,8 @@ build-backend = "hatchling.build"
 [dependency-groups]
 dev = [
     "coverage>=7.14.1",
+    "poethepoet>=0.46.0",
+    "pre-commit>=4.6.0",
     "pytest>=9.0.3",
     "ruff>=0.15.15",
 ]
