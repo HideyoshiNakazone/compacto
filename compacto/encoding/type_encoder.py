@@ -42,7 +42,5 @@ class TypeEncoder(Protocol[T]):
         cls.__encoders__[mapped_type] = cls
 
     @classmethod
-    def get_implementation(cls, type_: type) -> Self:
-        if encoder := cls.__encoders__.get(type_, None):
-            return encoder
-        raise TypeError(f"No encoder found for type {type_.__name__}")
+    def get_implementation(cls, type_: type) -> Self | None:
+        return cls.__encoders__.get(type_, None)

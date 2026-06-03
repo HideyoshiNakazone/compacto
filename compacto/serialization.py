@@ -1,9 +1,5 @@
 from compacto.encoding import (
-    BoolEncoder,
-    ByteEncoder,
-    FloatEncoder,
-    IntEncoder,
-    StringEncoder,
+    TypeEncoder,
 )
 from compacto.internal_types import HasAnnotations
 from compacto.struct_parser import StructDeff, struct_parser
@@ -23,20 +19,11 @@ def pack(obj: T) -> bytes:
         if isinstance(node, StructDeff):
             continue
 
-        if node.field_type is int:
-            data += IntEncoder.encode(getattr(obj, node.name))
+        encoder = TypeEncoder.get_implementation(node.field_type)
+        if encoder is None:
+            raise TypeError(f"Unsupported field type: {node.field_type}")
 
-        if node.field_type is str:
-            data += StringEncoder.encode(getattr(obj, node.name))
-
-        if node.field_type is bool:
-            data += BoolEncoder.encode(getattr(obj, node.name))
-
-        if node.field_type is float:
-            data += FloatEncoder.encode(getattr(obj, node.name))
-
-        if node.field_type is bytes:
-            data += ByteEncoder.encode(getattr(obj, node.name))
+        data += encoder.encode(getattr(obj, node.name))
 
     return data
 
@@ -50,29 +37,12 @@ def unpack(clzz: type[T], data: bytes) -> T:
         if isinstance(node, StructDeff):
             continue
 
-        if node.field_type is int:
-            value, var_offset = IntEncoder.decode(data[offset:])
-            offset += var_offset
-            fields[node.name] = value
+        encoder = TypeEncoder.get_implementation(node.field_type)
+        if encoder is None:
+            raise TypeError(f"Unsupported field type: {node.field_type}")
 
-        elif node.field_type is str:
-            value, var_offset = StringEncoder.decode(data[offset:])
-            offset += var_offset
-            fields[node.name] = value
-
-        elif node.field_type is bool:
-            value, var_offset = BoolEncoder.decode(data[offset:])
-            offset += var_offset
-            fields[node.name] = value
-
-        elif node.field_type is float:
-            value, var_offset = FloatEncoder.decode(data[offset:])
-            offset += var_offset
-            fields[node.name] = value
-
-        elif node.field_type is bytes:
-            value, var_offset = ByteEncoder.decode(data[offset:])
-            offset += var_offset
-            fields[node.name] = value
+        value, var_offset = encoder.decode(data[offset:])
+        offset += var_offset
+        fields[node.name] = value
 
     return clzz(**fields)

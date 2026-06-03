@@ -11,8 +11,8 @@ class TestTypeEncoder:
         assert encoder.mapped_type is str
 
     def test_cannot_get_implementation(self) -> None:
-        with pytest.raises(TypeError):
-            _ = TypeEncoder.get_implementation(EllipsisType)
+        encoder = TypeEncoder.get_implementation(EllipsisType)
+        assert encoder is None
 
     def test_raises_if_subclass_doesnt_have_mapped_type(self) -> None:
         with pytest.raises(TypeError):
