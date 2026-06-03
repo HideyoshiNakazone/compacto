@@ -19,9 +19,10 @@ class TreeNode(Generic[V]):
     def new(cls, data: V, parent: Self | None = None) -> Self:
         return cls(parent=parent, children=[], data=data)
 
-    def add_child(self, child: Self) -> None:
+    def add_child(self, child: Self) -> Self:
         child.parent = self
         self.children.append(child)
+        return self
 
     def __iter__(self) -> Iterator[V]:
         yield self.data

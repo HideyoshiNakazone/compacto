@@ -1,8 +1,8 @@
 from compacto.internal_types import HasAnnotations, TreeNode
 
-import typing
+from typing_extensions import TypeVar, get_args, get_origin, get_type_hints
+
 from dataclasses import dataclass
-from typing import TypeVar, get_type_hints
 
 
 T = TypeVar("T", bound=HasAnnotations)
@@ -11,8 +11,14 @@ T = TypeVar("T", bound=HasAnnotations)
 @dataclass
 class StructDeff:
     name: str
-    native_type: type
+    field_type: type
     fields: dict[str, type]
+
+
+@dataclass
+class ListDeff:
+    name: str
+    field_type: type = list
 
 
 @dataclass
@@ -21,20 +27,22 @@ class FieldsDeff:
     field_type: type
 
 
-StructTyping = StructDeff | FieldsDeff
+@dataclass
+class FallbackPickle:
+    name: str
 
 
-def get_origin_type(field_type: type) -> type:
+StructTyping = StructDeff | FieldsDeff | ListDeff | FallbackPickle
+
+
+def _get_origin_type(field_type: type) -> type:
     """Unwrap generic aliases like list[int] → list."""
-    return typing.get_origin(field_type) or field_type
+    return get_origin(field_type) or field_type
 
 
-def struct_parser(obj_or_clzz: T | type[T]) -> TreeNode[StructTyping]:
-    clzz = obj_or_clzz if isinstance(obj_or_clzz, type) else type(obj_or_clzz)
-
-    annotated_fields = get_type_hints(clzz)
-    if not annotated_fields:
-        raise TypeError("Expected clzz to have a __annotations__ attribute")
+def _is_valid_annotation(clzz: type[T], annotations: dict[str, type] | None) -> bool:
+    if annotations is None:
+        return False
 
     all_attrs = [
         attr
@@ -42,19 +50,59 @@ def struct_parser(obj_or_clzz: T | type[T]) -> TreeNode[StructTyping]:
         if not attr.startswith("__") and not callable(getattr(clzz, attr))
     ]
     for field in all_attrs:
-        if field not in annotated_fields:
-            raise TypeError(f"Field {field} not in {annotated_fields}")
+        if field not in annotations:
+            return False
+
+    return True
+
+
+def _is_buildable_class(clzz: type[T], annotations: dict[str, type] | None) -> bool:
+    if annotations is None:
+        return False
+
+    constructor_annotations = get_type_hints(clzz.__init__)
+    if constructor_annotations is None:
+        return False
+
+    return all(
+        (field in annotations)
+        for field in constructor_annotations.keys()
+        if field != "return"
+    )
+
+
+def _parse_type(field_name: str, field_type: type) -> TreeNode[StructTyping]:
+    origin = _get_origin_type(field_type)
+
+    if origin is list:
+        return (
+            TreeNode[StructTyping]
+            .new(ListDeff(name=field_name))
+            .add_child(_parse_type("_element", get_args(field_type)[0]))
+        )
+
+    if origin.__module__ == "builtins":
+        return TreeNode[StructTyping].new(
+            FieldsDeff(name=field_name, field_type=field_type)
+        )
+
+    annotated_fields = get_type_hints(field_type)
+    if (
+        annotated_fields is None
+        or not _is_valid_annotation(field_type, annotated_fields)
+        or not _is_buildable_class(field_type, annotated_fields)
+    ):
+        return TreeNode[StructTyping].new(FallbackPickle(name=field_name))
 
     struct_node = TreeNode[StructTyping].new(
-        StructDeff(name=clzz.__name__, native_type=clzz, fields=annotated_fields)
+        StructDeff(name=field_name, field_type=field_type, fields=annotated_fields)
     )
-    for field, field_type in annotated_fields.items():
-        origin = get_origin_type(field_type)
-        if origin.__module__ == "builtins":
-            struct_node.add_child(
-                TreeNode.new(FieldsDeff(name=field, field_type=field_type))
-            )
-        else:
-            struct_node.add_child(struct_parser(clzz))
+    for sub_field_name, sub_field_type in annotated_fields.items():
+        struct_node.add_child(_parse_type(sub_field_name, sub_field_type))
 
     return struct_node
+
+
+def struct_parser(obj_or_clzz: T | type[T]) -> TreeNode[StructTyping]:
+    clzz = obj_or_clzz if isinstance(obj_or_clzz, type) else type(obj_or_clzz)
+    return _parse_type(clzz.__name__, clzz)

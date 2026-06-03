@@ -1,6 +1,8 @@
-from compacto.struct_parser import FieldsDeff, StructDeff, struct_parser
+from compacto.struct_parser import FallbackPickle, FieldsDeff, StructDeff, struct_parser
 
 import pytest
+
+from dataclasses import dataclass
 
 
 def test_struct_parser_throws_if_no_annotations() -> None:
@@ -8,17 +10,18 @@ def test_struct_parser_throws_if_no_annotations() -> None:
         struct_parser({})
 
 
-def test_struct_parser_throws_if_annotations_are_missing() -> None:
-    with pytest.raises(TypeError):
+def test_struct_parser_fallbacks_pickle_if_annotations_are_missing() -> None:
+    @dataclass
+    class NoAnnotations:
+        a: str
+        b = None
 
-        class NoAnnotations:
-            a: str
-            b = None
-
-        struct_parser(NoAnnotations)
+    typing_tree = struct_parser(NoAnnotations)
+    assert isinstance(typing_tree.data, FallbackPickle)
 
 
 def test_struct_parser_valid_annotations() -> None:
+    @dataclass
     class ValidAnnotations:
         a: str
         b: int
