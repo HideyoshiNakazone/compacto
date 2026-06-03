@@ -1,8 +1,13 @@
-from compacto.encoding import BoolEncoder, FloatEncoder, IntEncoder, StringEncoder
+from compacto.encoding import (
+    BoolEncoder,
+    ByteEncoder,
+    FloatEncoder,
+    IntEncoder,
+    StringEncoder,
+)
 from compacto.internal_types import HasAnnotations
 from compacto.struct_parser import StructDeff, struct_parser
 
-import struct
 from typing import TypeVar
 
 
@@ -28,12 +33,10 @@ def pack(obj: T) -> bytes:
             data += BoolEncoder.encode(getattr(obj, node.name))
 
         if node.field_type is float:
-            data += struct.pack("f", getattr(obj, node.name))
+            data += FloatEncoder.encode(getattr(obj, node.name))
 
         if node.field_type is bytes:
-            byte_data = getattr(obj, node.name)
-            data += struct.pack("I", len(byte_data))  # length prefix
-            data += byte_data
+            data += ByteEncoder.encode(getattr(obj, node.name))
 
     return data
 
@@ -68,9 +71,8 @@ def unpack(clzz: type[T], data: bytes) -> T:
             fields[node.name] = value
 
         elif node.field_type is bytes:
-            (length,) = struct.unpack_from("I", data, offset)
-            offset += struct.calcsize("I")
-            fields[node.name] = data[offset : offset + length]
-            offset += length
+            value, var_offset = ByteEncoder.decode(data[offset:])
+            offset += var_offset
+            fields[node.name] = value
 
     return clzz(**fields)
