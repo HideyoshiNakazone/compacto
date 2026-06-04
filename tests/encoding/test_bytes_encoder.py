@@ -7,7 +7,7 @@ class TestByteEncoder:
         value = b"Hello World"
 
         data = ByteEncoder.encode(value)
-        decoded_value, offset = ByteEncoder.decode(data)
+        decoded_value, offset = ByteEncoder.decode(..., data)
 
         assert decoded_value == value
 
@@ -15,7 +15,7 @@ class TestByteEncoder:
         value = b""
 
         data = ByteEncoder.encode(value)
-        decoded_value, offset = ByteEncoder.decode(data)
+        decoded_value, offset = ByteEncoder.decode(..., data)
 
         assert decoded_value == value
 
@@ -27,6 +27,6 @@ class TestByteEncoder:
     def test_decode_offset(self):
         value = b"test"
         data = ByteEncoder.encode(value)
-        _, offset = ByteEncoder.decode(data)
+        _, offset = ByteEncoder.decode(..., data)
 
         assert offset == SIZE_UNSIGNED_LONG + len(value)

@@ -90,15 +90,16 @@ def _parse_type(field_name: str, field_type: type) -> TreeNode[StructTyping]:
 
     if origin is list:
         return (
-            TreeNode[StructTyping]
-            .new(ListDeff(name=field_name))
+            ListDeff(name=field_name)
+            .to_tree_node()
             .add_child(_parse_type("_element", get_args(field_type)[0]))
         )
 
+    if origin is dict:
+        return FallbackPickle(name=field_name).to_tree_node()
+
     if origin.__module__ == "builtins":
-        return TreeNode[StructTyping].new(
-            FieldsDeff(name=field_name, field_type=field_type)
-        )
+        return FieldsDeff(name=field_name, field_type=field_type).to_tree_node()
 
     annotated_fields = get_type_hints(field_type)
     if (
@@ -108,9 +109,9 @@ def _parse_type(field_name: str, field_type: type) -> TreeNode[StructTyping]:
     ):
         return TreeNode[StructTyping].new(FallbackPickle(name=field_name))
 
-    struct_node = TreeNode[StructTyping].new(
-        StructDeff(name=field_name, field_type=field_type, fields=annotated_fields)
-    )
+    struct_node = StructDeff(
+        name=field_name, field_type=field_type, fields=annotated_fields
+    ).to_tree_node()
     for sub_field_name, sub_field_type in annotated_fields.items():
         struct_node.add_child(_parse_type(sub_field_name, sub_field_type))
 

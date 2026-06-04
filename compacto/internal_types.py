@@ -24,7 +24,6 @@ class TreeNode(Generic[V]):
         self.children.append(child)
         return self
 
-    def __iter__(self) -> Iterator[V]:
-        yield self.data
+    def __iter__(self) -> Iterator[Self]:
         for child in self.children:
-            yield from child
+            yield child

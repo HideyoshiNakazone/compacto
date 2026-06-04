@@ -1,13 +1,11 @@
 from compacto.struct_parser import FallbackPickle, FieldsDeff, StructDeff, struct_parser
 
-import pytest
-
 from dataclasses import dataclass
 
 
 def test_struct_parser_throws_if_no_annotations() -> None:
-    with pytest.raises(TypeError):
-        struct_parser({})
+    typing_tree = struct_parser({})
+    assert isinstance(typing_tree.data, FallbackPickle)
 
 
 def test_struct_parser_fallbacks_pickle_if_annotations_are_missing() -> None:

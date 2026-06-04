@@ -6,7 +6,7 @@ class TestStringEncoder:
         string_value = "Hello World"
 
         data = StringEncoder.encode(string_value)
-        decoded_string, offset = StringEncoder.decode(data)
+        decoded_string, offset = StringEncoder.decode(..., data)
 
         assert string_value == decoded_string
 
@@ -14,7 +14,7 @@ class TestStringEncoder:
         string_value = ""
 
         data = StringEncoder.encode(string_value)
-        decoded_string, offset = StringEncoder.decode(data)
+        decoded_string, offset = StringEncoder.decode(..., data)
 
         assert string_value == decoded_string
 
@@ -23,6 +23,6 @@ class TestStringEncoder:
         chunk_string = "A" * (1024 * 1024 * chunk_size_mb)  # 100 MB block
 
         data = StringEncoder.encode(chunk_string)
-        decoded_string, offset = StringEncoder.decode(data)
+        decoded_string, offset = StringEncoder.decode(..., data)
 
         assert chunk_string == decoded_string

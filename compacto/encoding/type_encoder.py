@@ -47,7 +47,10 @@ class TypeEncoder(Protocol[T]):
 
     @classmethod
     def get_implementation(cls, type_: type) -> Self | None:
-        return cls.__encoders__.get(type_, None)
+        encoder = cls.__encoders__.get(type_, None)
+        if encoder is not None:
+            return encoder
+        return cls.__encoders__.get(object, None)
 
     @classmethod
     def pack(cls, obj: T) -> bytes:
