@@ -20,7 +20,7 @@ def test_pack_unpack() -> None:
     obj = DataWrapper(42, "teste", ["a", "b", "c"], SubData(1, 2))
     data = pack(obj)
 
-    unpacked_obj, _ = unpack(DataWrapper, data)
+    unpacked_obj = unpack(DataWrapper, data)
 
     assert unpacked_obj.a == obj.a
     assert unpacked_obj.b == obj.b

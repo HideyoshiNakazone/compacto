@@ -14,4 +14,5 @@ def pack(obj: T) -> bytes:
 
 
 def unpack(clzz: type[T], data: bytes) -> T:
-    return TypeEncoder.unpack(clzz, data)
+    value, _ = TypeEncoder.unpack(clzz, data)
+    return value

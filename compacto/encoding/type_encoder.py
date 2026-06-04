@@ -62,7 +62,7 @@ class TypeEncoder(Protocol[T]):
         return encoder.encode(obj)
 
     @classmethod
-    def unpack(cls, clzz: type[T], data: bytes) -> T:
+    def unpack(cls, clzz: type[T], data: bytes) -> Tuple[T, int]:
         encoder = cls.get_implementation(clzz)
         if encoder is None:
             raise TypeError(f"Unsupported field type: {clzz.__name__}")
