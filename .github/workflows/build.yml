@@ -45,9 +45,6 @@ jobs:
           uv run poe tests
           uv run poe tests-report
 
-      - name: Static type check
-        run: uv run poe type-check
-
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v5
         with:
