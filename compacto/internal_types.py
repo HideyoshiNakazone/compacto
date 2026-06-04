@@ -1,5 +1,6 @@
+from typing_extensions import Generic, Iterator, Protocol, Self, TypeVar
+
 from dataclasses import dataclass
-from typing import Generic, Iterator, Protocol, Self, TypeVar
 
 
 class HasAnnotations(Protocol):

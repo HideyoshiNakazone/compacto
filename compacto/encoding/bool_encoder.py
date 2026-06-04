@@ -6,8 +6,9 @@ from compacto.utils.constants import (
     SIZE_BOOL,
 )
 
+from typing_extensions import Tuple
+
 import struct
-from typing import Tuple
 
 
 class BoolEncoder(TypeEncoder[bool]):

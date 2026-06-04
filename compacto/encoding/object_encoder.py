@@ -7,9 +7,10 @@ from compacto.struct_parser import (
 )
 from compacto.utils.constants import SIZE_LONG_LONG, UNSIGNED_LONG_TYPE_TOKEN
 
+from typing_extensions import Tuple
+
 import pickle
 import struct
-from typing import Tuple
 
 
 class ObjectEncoder(TypeEncoder[object]):

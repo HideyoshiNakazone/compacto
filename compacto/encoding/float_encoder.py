@@ -6,8 +6,9 @@ from compacto.utils.constants import (
     SIZE_DOUBLE,
 )
 
+from typing_extensions import Tuple
+
 import struct
-from typing import Tuple
 
 
 class FloatEncoder(TypeEncoder[float]):

@@ -3,8 +3,9 @@ from compacto.internal_types import TreeNode
 from compacto.struct_parser import StructTyping
 from compacto.utils.constants import SIZE_UNSIGNED_LONG, UNSIGNED_LONG_TYPE_TOKEN
 
+from typing_extensions import Tuple
+
 import struct
-from typing import Tuple
 
 
 class StringEncoder(TypeEncoder[str]):

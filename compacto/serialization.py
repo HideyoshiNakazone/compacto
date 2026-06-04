@@ -3,7 +3,7 @@ from compacto.encoding import (
 )
 from compacto.internal_types import HasAnnotations
 
-from typing import TypeVar
+from typing_extensions import TypeVar
 
 
 T = TypeVar("T", bound=HasAnnotations)
