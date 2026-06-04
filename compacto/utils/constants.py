@@ -1,6 +1,15 @@
 import struct
 
 
+def safe_calcsize(token, fallback=None):
+    try:
+        return struct.calcsize(token)
+    except struct.error as e:
+        if fallback is None:
+            raise e
+        return fallback
+
+
 # Type Tokens
 BYTE_TYPE_TOKEN = "x"
 CHAR_TYPE_TOKEN = "c"
@@ -25,24 +34,24 @@ DOUBLE_COMPLEX_TYPE_TOKEN = "D"
 VOID_PTR_TYPE_TOKEN = "P"
 
 # Fixed and System-Dependent C Type Sizes via calcsize
-SIZE_PAD_BYTE = struct.calcsize(BYTE_TYPE_TOKEN)
-SIZE_CHAR = struct.calcsize(CHAR_TYPE_TOKEN)
-SIZE_SIGNED_CHAR = struct.calcsize(SIGNED_CHAR_TYPE_TOKEN)
-SIZE_UNSIGNED_CHAR = struct.calcsize(UNSIGNED_CHAR_TYPE_TOKEN)
-SIZE_BOOL = struct.calcsize(BOOL_TYPE_TOKEN)
-SIZE_SHORT = struct.calcsize(SHORT_TYPE_TOKEN)
-SIZE_UNSIGNED_SHORT = struct.calcsize(UNSIGNED_SHORT_TYPE_TOKEN)
-SIZE_INT = struct.calcsize(INT_TYPE_TOKEN)
-SIZE_UNSIGNED_INT = struct.calcsize(UNSIGNED_INT_TYPE_TOKEN)
-SIZE_LONG = struct.calcsize(LONG_TYPE_TOKEN)
-SIZE_UNSIGNED_LONG = struct.calcsize(UNSIGNED_LONG_TYPE_TOKEN)
-SIZE_LONG_LONG = struct.calcsize(LONG_LONG_TYPE_TOKEN)
-SIZE_UNSIGNED_LONG_LONG = struct.calcsize(UNSIGNED_LONG_LONG_TYPE_TOKEN)
-SIZE_SSIZE_T = struct.calcsize(SSIZE_T_TYPE_TOKEN)
-SIZE_SIZE_T = struct.calcsize(SIZE_T_TYPE_TOKEN)
-SIZE_FLOAT16 = struct.calcsize(FLOAT16_TYPE_TOKEN)
-SIZE_FLOAT = struct.calcsize(FLOAT_TYPE_TOKEN)
-SIZE_DOUBLE = struct.calcsize(DOUBLE_TYPE_TOKEN)
-SIZE_FLOAT_COMPLEX = struct.calcsize(FLOAT_COMPLEX_TYPE_TOKEN)
-SIZE_DOUBLE_COMPLEX = struct.calcsize(DOUBLE_COMPLEX_TYPE_TOKEN)
-SIZE_VOID_PTR = struct.calcsize(VOID_PTR_TYPE_TOKEN)
+SIZE_PAD_BYTE = safe_calcsize(BYTE_TYPE_TOKEN)
+SIZE_CHAR = safe_calcsize(CHAR_TYPE_TOKEN)
+SIZE_SIGNED_CHAR = safe_calcsize(SIGNED_CHAR_TYPE_TOKEN)
+SIZE_UNSIGNED_CHAR = safe_calcsize(UNSIGNED_CHAR_TYPE_TOKEN)
+SIZE_BOOL = safe_calcsize(BOOL_TYPE_TOKEN)
+SIZE_SHORT = safe_calcsize(SHORT_TYPE_TOKEN)
+SIZE_UNSIGNED_SHORT = safe_calcsize(UNSIGNED_SHORT_TYPE_TOKEN)
+SIZE_INT = safe_calcsize(INT_TYPE_TOKEN)
+SIZE_UNSIGNED_INT = safe_calcsize(UNSIGNED_INT_TYPE_TOKEN)
+SIZE_LONG = safe_calcsize(LONG_TYPE_TOKEN)
+SIZE_UNSIGNED_LONG = safe_calcsize(UNSIGNED_LONG_TYPE_TOKEN)
+SIZE_LONG_LONG = safe_calcsize(LONG_LONG_TYPE_TOKEN)
+SIZE_UNSIGNED_LONG_LONG = safe_calcsize(UNSIGNED_LONG_LONG_TYPE_TOKEN)
+SIZE_SSIZE_T = safe_calcsize(SSIZE_T_TYPE_TOKEN)
+SIZE_SIZE_T = safe_calcsize(SIZE_T_TYPE_TOKEN)
+SIZE_FLOAT16 = safe_calcsize(FLOAT16_TYPE_TOKEN)
+SIZE_FLOAT = safe_calcsize(FLOAT_TYPE_TOKEN)
+SIZE_DOUBLE = safe_calcsize(DOUBLE_TYPE_TOKEN)
+SIZE_FLOAT_COMPLEX = safe_calcsize(FLOAT_COMPLEX_TYPE_TOKEN, safe_calcsize("f") * 2)
+SIZE_DOUBLE_COMPLEX = safe_calcsize(DOUBLE_COMPLEX_TYPE_TOKEN, safe_calcsize("d") * 2)
+SIZE_VOID_PTR = safe_calcsize(VOID_PTR_TYPE_TOKEN)
