@@ -1,6 +1,13 @@
 from compacto.internal_types import HasAnnotations, TreeNode
 
-from typing_extensions import Generic, TypeVar, get_args, get_origin, get_type_hints
+from typing_extensions import (
+    Generic,
+    Self,
+    TypeVar,
+    get_args,
+    get_origin,
+    get_type_hints,
+)
 
 from dataclasses import dataclass
 
@@ -10,6 +17,9 @@ T = TypeVar("T", bound=HasAnnotations)
 
 class _GenericTypeDeff(Generic[T]):
     field_type: type
+
+    def to_tree_node(self) -> TreeNode[Self]:
+        return TreeNode[StructTyping].new(self)
 
 
 @dataclass

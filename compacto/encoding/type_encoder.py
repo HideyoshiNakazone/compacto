@@ -1,5 +1,5 @@
 from compacto.internal_types import TreeNode
-from compacto.struct_parser import StructDeff
+from compacto.struct_parser import StructTyping, struct_parser
 
 from typing_extensions import (
     ClassVar,
@@ -30,7 +30,7 @@ class TypeEncoder(Protocol[T]):
         ...
 
     @staticmethod
-    def decode(node: TreeNode[StructDeff], data: bytes) -> Tuple[T, int]:
+    def decode(node: TreeNode[StructTyping], data: bytes) -> Tuple[T, int]:
         """
         Decoder implementation per type
         :param node: definition of the type to decode
@@ -48,3 +48,21 @@ class TypeEncoder(Protocol[T]):
     @classmethod
     def get_implementation(cls, type_: type) -> Self | None:
         return cls.__encoders__.get(type_, None)
+
+    @classmethod
+    def pack(cls, obj: T) -> bytes:
+        clzz = type(obj)
+        encoder = cls.get_implementation(clzz)
+        if encoder is None:
+            raise TypeError(f"Unsupported field type: {clzz.__name__}")
+
+        return encoder.encode(obj)
+
+    @classmethod
+    def unpack(cls, clzz: type[T], data: bytes) -> T:
+        encoder = cls.get_implementation(clzz)
+        if encoder is None:
+            raise TypeError(f"Unsupported field type: {clzz.__name__}")
+
+        typing_tree = struct_parser(clzz)
+        return encoder.decode(typing_tree, data)
