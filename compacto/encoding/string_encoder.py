@@ -1,4 +1,6 @@
 from compacto.encoding.type_encoder import TypeEncoder
+from compacto.internal_types import TreeNode
+from compacto.struct_parser import StructDeff
 from compacto.utils.constants import SIZE_UNSIGNED_LONG, UNSIGNED_LONG_TYPE_TOKEN
 
 import struct
@@ -17,7 +19,7 @@ class StringEncoder(TypeEncoder[str]):
         return bytes(buf)
 
     @staticmethod
-    def decode(data: bytes) -> Tuple[str, int]:
+    def decode(_: TreeNode[StructDeff], data: bytes) -> Tuple[str, int]:
         data = memoryview(data)
         (length,) = struct.unpack_from(UNSIGNED_LONG_TYPE_TOKEN, data)
         data = data[SIZE_UNSIGNED_LONG:]

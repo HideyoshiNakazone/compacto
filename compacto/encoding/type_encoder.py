@@ -1,3 +1,6 @@
+from compacto.internal_types import TreeNode
+from compacto.struct_parser import StructDeff
+
 from typing_extensions import (
     ClassVar,
     Protocol,
@@ -27,9 +30,10 @@ class TypeEncoder(Protocol[T]):
         ...
 
     @staticmethod
-    def decode(data: bytes) -> Tuple[T, int]:
+    def decode(node: TreeNode[StructDeff], data: bytes) -> Tuple[T, int]:
         """
         Decoder implementation per type
+        :param node: definition of the type to decode
         :param data: byte encoded data
         :return: Tuple of (decoded value, number of bytes consumed)
         """

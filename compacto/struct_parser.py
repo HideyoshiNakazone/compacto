@@ -1,6 +1,6 @@
 from compacto.internal_types import HasAnnotations, TreeNode
 
-from typing_extensions import TypeVar, get_args, get_origin, get_type_hints
+from typing_extensions import Generic, TypeVar, get_args, get_origin, get_type_hints
 
 from dataclasses import dataclass
 
@@ -8,27 +8,31 @@ from dataclasses import dataclass
 T = TypeVar("T", bound=HasAnnotations)
 
 
+class _GenericTypeDeff(Generic[T]):
+    field_type: type
+
+
 @dataclass
-class StructDeff:
+class StructDeff(_GenericTypeDeff[T]):
     name: str
     field_type: type
     fields: dict[str, type]
 
 
 @dataclass
-class ListDeff:
+class ListDeff(_GenericTypeDeff[T]):
     name: str
     field_type: type = list
 
 
 @dataclass
-class FieldsDeff:
+class FieldsDeff(_GenericTypeDeff[T]):
     name: str
     field_type: type
 
 
 @dataclass
-class FallbackPickle:
+class FallbackPickle(_GenericTypeDeff[T]):
     name: str
 
 

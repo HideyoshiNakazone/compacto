@@ -1,4 +1,6 @@
 from compacto.encoding.type_encoder import TypeEncoder
+from compacto.internal_types import TreeNode
+from compacto.struct_parser import StructDeff
 from compacto.utils.constants import (
     DOUBLE_TYPE_TOKEN,
     SIZE_DOUBLE,
@@ -16,6 +18,6 @@ class FloatEncoder(TypeEncoder[float]):
         return struct.pack(DOUBLE_TYPE_TOKEN, value)
 
     @staticmethod
-    def decode(data: bytes) -> Tuple[float, int]:
+    def decode(_: TreeNode[StructDeff], data: bytes) -> Tuple[float, int]:
         (value,) = struct.unpack_from(DOUBLE_TYPE_TOKEN, data)
         return value, SIZE_DOUBLE

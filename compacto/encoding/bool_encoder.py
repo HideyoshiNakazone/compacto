@@ -1,4 +1,6 @@
 from compacto.encoding.type_encoder import TypeEncoder
+from compacto.internal_types import TreeNode
+from compacto.struct_parser import StructDeff
 from compacto.utils.constants import (
     BOOL_TYPE_TOKEN,
     SIZE_BOOL,
@@ -16,6 +18,6 @@ class BoolEncoder(TypeEncoder[bool]):
         return struct.pack(BOOL_TYPE_TOKEN, value)
 
     @staticmethod
-    def decode(data: bytes) -> Tuple[bool, int]:
+    def decode(_: TreeNode[StructDeff], data: bytes) -> Tuple[bool, int]:
         (value,) = struct.unpack_from(BOOL_TYPE_TOKEN, data)
         return value, SIZE_BOOL

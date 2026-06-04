@@ -41,7 +41,7 @@ def unpack(clzz: type[T], data: bytes) -> T:
         if encoder is None:
             raise TypeError(f"Unsupported field type: {node.field_type}")
 
-        value, var_offset = encoder.decode(data[offset:])
+        value, var_offset = encoder.decode(node, data[offset:])
         offset += var_offset
         fields[node.name] = value
 
