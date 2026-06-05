@@ -15,7 +15,7 @@ class BoolEncoder(TypeEncoder[bool]):
     mapped_type = bool
 
     @staticmethod
-    def encode(value: bool) -> bytes:
+    def encode(node: TreeNode[StructTyping], value: bool) -> bytes:
         return struct.pack(BOOL_TYPE_TOKEN, value)
 
     @staticmethod

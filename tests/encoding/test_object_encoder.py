@@ -29,7 +29,7 @@ class TestListEncoder:
             b="hello",
         )
 
-        data = ObjectEncoder.encode(test_obj)
+        data = ObjectEncoder.encode(obj_deff, test_obj)
         decoded_obj, _ = ObjectEncoder.decode(obj_deff, data)
 
         assert test_obj == decoded_obj

@@ -12,17 +12,15 @@ class ObjectEncoder(TypeEncoder[object]):
     mapped_type = object
 
     @staticmethod
-    def encode(value: object) -> bytes:
-        typing_tree = struct_parser(value)
-
-        data = b""
-        for node in typing_tree:
-            node_data = node.data
+    def encode(node: TreeNode[StructTyping], value: object) -> bytes:
+        data = bytearray()
+        for child_node in node:
+            node_data = child_node.data
             encoder = TypeEncoder.get_implementation(node_data.field_type)
             if encoder is None:
                 raise TypeError(f"Unsupported field type: {node_data.field_type}")
 
-            data += encoder.encode(getattr(value, node_data.name))
+            data.extend(encoder.encode(child_node, getattr(value, node_data.name)))
 
         return data
 

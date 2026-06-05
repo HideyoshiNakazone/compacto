@@ -12,7 +12,7 @@ class ByteEncoder(TypeEncoder[bytes]):
     mapped_type = bytes
 
     @staticmethod
-    def encode(value: bytes) -> bytes:
+    def encode(node: TreeNode[StructTyping], value: bytes) -> bytes:
         buf = bytearray(SIZE_UNSIGNED_LONG + len(value))
         struct.pack_into(UNSIGNED_LONG_TYPE_TOKEN, buf, 0, len(value))
         buf[SIZE_UNSIGNED_LONG:] = value
