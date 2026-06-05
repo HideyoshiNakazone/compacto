@@ -1,16 +1,11 @@
 from compacto.encoding.type_encoder import TypeEncoder
 from compacto.internal_types import TreeNode
 from compacto.struct_parser import (
-    FallbackPickle,
     StructTyping,
     struct_parser,
 )
-from compacto.utils.constants import SIZE_LONG_LONG, UNSIGNED_LONG_TYPE_TOKEN
 
 from typing_extensions import Tuple
-
-import pickle
-import struct
 
 
 class ObjectEncoder(TypeEncoder[object]):
@@ -19,11 +14,6 @@ class ObjectEncoder(TypeEncoder[object]):
     @staticmethod
     def encode(value: object) -> bytes:
         typing_tree = struct_parser(value)
-
-        if isinstance(typing_tree.data, FallbackPickle):
-            data = pickle.dumps(value)
-            len_data = len(data)
-            return struct.pack(UNSIGNED_LONG_TYPE_TOKEN, len_data) + data
 
         data = b""
         for node in typing_tree:
@@ -41,11 +31,6 @@ class ObjectEncoder(TypeEncoder[object]):
         clzz: type = node.data.field_type
 
         typing_tree = struct_parser(clzz)
-
-        if isinstance(typing_tree.data, FallbackPickle):
-            (len_data,) = struct.unpack_from(UNSIGNED_LONG_TYPE_TOKEN, data)
-            data = pickle.loads(data[SIZE_LONG_LONG:len_data])
-            return data, SIZE_LONG_LONG + len_data
 
         fields: dict[str, object] = {}
         offset = 0

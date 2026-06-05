@@ -26,3 +26,12 @@ def test_pack_unpack() -> None:
     assert unpacked_obj.b == obj.b
     assert unpacked_obj.c == obj.c
     assert unpacked_obj.d == obj.d
+
+
+def test_pack_unpack_on_native_types() -> None:
+    ORIGINAL_DATA = 42
+
+    data = pack(ORIGINAL_DATA)
+    unpacked_data = unpack(int, data)
+
+    assert unpacked_data == ORIGINAL_DATA

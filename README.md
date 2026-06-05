@@ -158,6 +158,15 @@ uv run poe type-check
 
 ---
 
+## Roadmap
+
+- [ ] `Optional[T]` — encode nullable fields with a 1-byte presence flag
+- [ ] `Enum` — encode as underlying integer value for cross-language compatibility
+- [ ] Endianness control — allow specifying byte order (big/little/native) for cross-language interop
+- [ ] Magic bytes / format version header — safe cross-language deserialization
+
+---
+
 ## License
 
 MIT — see [LICENSE](LICENSE).

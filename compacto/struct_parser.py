@@ -41,12 +41,7 @@ class FieldsDeff(_GenericTypeDeff[T]):
     field_type: type
 
 
-@dataclass
-class FallbackPickle(_GenericTypeDeff[T]):
-    name: str
-
-
-StructTyping = StructDeff | FieldsDeff | ListDeff | FallbackPickle
+StructTyping = StructDeff | FieldsDeff | ListDeff
 
 
 def _get_origin_type(field_type: type) -> type:
@@ -96,7 +91,9 @@ def _parse_type(field_name: str, field_type: type) -> TreeNode[StructTyping]:
         )
 
     if origin is dict:
-        return FallbackPickle(name=field_name).to_tree_node()
+        raise TypeError(
+            f"Dict types are not supported for field '{field_name}'. Consider using a list of key-value pairs instead."
+        )
 
     if origin.__module__ == "builtins":
         return FieldsDeff(name=field_name, field_type=field_type).to_tree_node()
@@ -107,7 +104,10 @@ def _parse_type(field_name: str, field_type: type) -> TreeNode[StructTyping]:
         or not _is_valid_annotation(field_type, annotated_fields)
         or not _is_buildable_class(field_type, annotated_fields)
     ):
-        return TreeNode[StructTyping].new(FallbackPickle(name=field_name))
+        raise TypeError(
+            "The provided type or doesn't have a __annotations__ attribute or doesn't have a compatible __init__ method. "
+            "Ensure that all fields are annotated and that the class can be instantiated with those fields."
+        )
 
     struct_node = StructDeff(
         name=field_name, field_type=field_type, fields=annotated_fields
