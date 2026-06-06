@@ -1,6 +1,6 @@
 from compacto.encoding import ListEncoder
-from compacto.internal_types import TreeNode
 from compacto.struct_parser import FieldsDeff, ListDeff, StructTyping
+from compacto.utils.tree_node import TreeNode
 
 import pytest
 

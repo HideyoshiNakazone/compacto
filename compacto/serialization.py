@@ -1,7 +1,7 @@
 from compacto.encoding import (
     TypeEncoder,
 )
-from compacto.internal_types import HasAnnotations
+from compacto.utils.annotations import HasAnnotations
 
 from typing_extensions import TypeVar
 

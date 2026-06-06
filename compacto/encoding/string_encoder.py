@@ -1,7 +1,7 @@
 from compacto.encoding.type_encoder import TypeEncoder
-from compacto.internal_types import TreeNode
 from compacto.struct_parser import StructTyping
 from compacto.utils.constants import SIZE_UNSIGNED_LONG, UNSIGNED_LONG_TYPE_TOKEN
+from compacto.utils.tree_node import TreeNode
 
 from typing_extensions import Tuple
 

@@ -1,10 +1,6 @@
-from typing_extensions import Generic, Iterator, Protocol, Self, TypeVar
+from typing_extensions import Generic, Iterator, Self, TypeVar
 
 from dataclasses import dataclass
-
-
-class HasAnnotations(Protocol):
-    __annotations__: dict[str, type]
 
 
 V = TypeVar("V")

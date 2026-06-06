@@ -1,4 +1,5 @@
-from compacto.internal_types import HasAnnotations, TreeNode
+from compacto.utils.annotations import HasAnnotations
+from compacto.utils.tree_node import TreeNode
 
 from typing_extensions import (
     Generic,

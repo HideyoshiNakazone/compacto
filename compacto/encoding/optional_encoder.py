@@ -1,7 +1,7 @@
 from compacto.encoding.type_encoder import TypeEncoder
-from compacto.internal_types import TreeNode
 from compacto.struct_parser import OptionalDeff, StructTyping
 from compacto.utils.constants import BOOL_TYPE_TOKEN, SIZE_BOOL
+from compacto.utils.tree_node import TreeNode
 
 from typing_extensions import Any, Optional, Tuple
 

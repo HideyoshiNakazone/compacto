@@ -1,9 +1,9 @@
 from compacto.encoding.type_encoder import TypeEncoder
-from compacto.internal_types import TreeNode
 from compacto.struct_parser import (
     StructTyping,
     struct_parser,
 )
+from compacto.utils.tree_node import TreeNode
 
 from typing_extensions import Tuple
 
