@@ -5,6 +5,7 @@ from typing_extensions import (
     Optional,
     Self,
     TypeVar,
+    Union,
     get_args,
     get_origin,
     get_type_hints,
@@ -12,7 +13,6 @@ from typing_extensions import (
 
 from dataclasses import dataclass
 from types import NoneType
-from typing import Union
 
 
 T = TypeVar("T", bound=HasAnnotations)

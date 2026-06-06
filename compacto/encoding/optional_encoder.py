@@ -3,15 +3,16 @@ from compacto.internal_types import TreeNode
 from compacto.struct_parser import OptionalDeff, StructTyping
 from compacto.utils.constants import BOOL_TYPE_TOKEN, SIZE_BOOL
 
+from typing_extensions import Any, Optional, Tuple
+
 import struct
-from typing import Optional, Tuple
 
 
 class OptionalEncoder(TypeEncoder[Optional]):
     mapped_type = Optional
 
     @staticmethod
-    def encode(node: TreeNode[StructTyping], value: Optional) -> bytes:
+    def encode(node: TreeNode[StructTyping], value: Optional[Any]) -> bytes:
         if not isinstance(node.data, OptionalDeff):
             raise TypeError(f"Unsupported field type: {type(node.data)}")
 
@@ -37,7 +38,7 @@ class OptionalEncoder(TypeEncoder[Optional]):
         return data
 
     @staticmethod
-    def decode(node: TreeNode[StructTyping], data: bytes) -> Tuple[Optional, int]:
+    def decode(node: TreeNode[StructTyping], data: bytes) -> Tuple[Optional[Any], int]:
         if not isinstance(node.data, OptionalDeff):
             raise TypeError(f"Unsupported field type: {type(node.data)}")
 

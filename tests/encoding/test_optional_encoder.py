@@ -4,10 +4,10 @@ from compacto.struct_parser import FieldsDeff, OptionalDeff, StructTyping, struc
 from compacto.utils.constants import BOOL_TYPE_TOKEN, SIZE_BOOL
 
 import pytest
+from typing_extensions import Optional
 
 import struct
 from dataclasses import dataclass
-from typing import Optional
 
 
 @dataclass

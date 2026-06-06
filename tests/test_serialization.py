@@ -1,7 +1,8 @@
 from compacto import pack, unpack
 
+from typing_extensions import Optional
+
 from dataclasses import dataclass
-from typing import Optional
 
 
 def test_pack_unpack() -> None:
