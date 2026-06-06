@@ -21,9 +21,10 @@ class TypeEncoder(Protocol[T]):
     __encoders__: dict[type, Self] = {}
 
     @staticmethod
-    def encode(value: T) -> bytes:
+    def encode(node: TreeNode[StructTyping], value: T) -> bytes:
         """
         Encode a value to bytes.
+        :param node: definition of the type to encode
         :param value: value to encode
         :return: byte encoded value
         """
@@ -59,7 +60,8 @@ class TypeEncoder(Protocol[T]):
         if encoder is None:
             raise TypeError(f"Unsupported field type: {clzz.__name__}")
 
-        return encoder.encode(obj)
+        typing_tree = struct_parser(clzz)
+        return encoder.encode(typing_tree, obj)
 
     @classmethod
     def unpack(cls, clzz: type[T], data: bytes) -> Tuple[T, int]:

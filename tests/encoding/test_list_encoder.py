@@ -28,7 +28,7 @@ class TestListEncoder:
             "World",
         ]
 
-        data = ListEncoder.encode(list_value)
+        data = ListEncoder.encode(string_list_deff, list_value)
         decoded_list_string, offset = ListEncoder.decode(string_list_deff, data)
 
         assert list_value == decoded_list_string
@@ -36,7 +36,7 @@ class TestListEncoder:
     def test_encode_decode_list_int(self, int_list_deff: TreeNode[StructTyping]):
         list_value = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
 
-        data = ListEncoder.encode(list_value)
+        data = ListEncoder.encode(int_list_deff, list_value)
         decoded_list_int, offset = ListEncoder.decode(int_list_deff, data)
 
         assert list_value == decoded_list_int
@@ -46,7 +46,7 @@ class TestListEncoder:
     ):
         list_value = []
 
-        data = ListEncoder.encode(list_value)
+        data = ListEncoder.encode(int_list_deff, list_value)
         decoded_list_int, offset = ListEncoder.decode(int_list_deff, data)
 
         assert list_value == decoded_list_int

@@ -1,11 +1,14 @@
-from compacto.struct_parser import FallbackPickle, FieldsDeff, StructDeff, struct_parser
+from compacto.struct_parser import FieldsDeff, OptionalDeff, StructDeff, struct_parser
+
+import pytest
+from typing_extensions import Optional
 
 from dataclasses import dataclass
 
 
 def test_struct_parser_throws_if_no_annotations() -> None:
-    typing_tree = struct_parser({})
-    assert isinstance(typing_tree.data, FallbackPickle)
+    with pytest.raises(TypeError):
+        _ = struct_parser({})
 
 
 def test_struct_parser_fallbacks_pickle_if_annotations_are_missing() -> None:
@@ -14,8 +17,8 @@ def test_struct_parser_fallbacks_pickle_if_annotations_are_missing() -> None:
         a: str
         b = None
 
-    typing_tree = struct_parser(NoAnnotations)
-    assert isinstance(typing_tree.data, FallbackPickle)
+    with pytest.raises(TypeError):
+        _ = struct_parser(NoAnnotations)
 
 
 def test_struct_parser_valid_annotations() -> None:
@@ -23,8 +26,12 @@ def test_struct_parser_valid_annotations() -> None:
     class ValidAnnotations:
         a: str
         b: int
+        c: Optional[int]
 
     typing_tree = struct_parser(ValidAnnotations)
 
     assert isinstance(typing_tree.data, StructDeff)
-    assert all(isinstance(child.data, FieldsDeff) for child in typing_tree.children)
+
+    assert isinstance(typing_tree.children[0].data, FieldsDeff)
+    assert isinstance(typing_tree.children[1].data, FieldsDeff)
+    assert isinstance(typing_tree.children[2].data, OptionalDeff)

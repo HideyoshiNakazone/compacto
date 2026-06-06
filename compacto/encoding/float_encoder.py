@@ -15,7 +15,7 @@ class FloatEncoder(TypeEncoder[float]):
     mapped_type = float
 
     @staticmethod
-    def encode(value: float) -> bytes:
+    def encode(node: TreeNode[StructTyping], value: float) -> bytes:
         return struct.pack(DOUBLE_TYPE_TOKEN, value)
 
     @staticmethod

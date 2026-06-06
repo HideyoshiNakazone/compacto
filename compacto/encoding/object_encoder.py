@@ -1,38 +1,26 @@
 from compacto.encoding.type_encoder import TypeEncoder
 from compacto.internal_types import TreeNode
 from compacto.struct_parser import (
-    FallbackPickle,
     StructTyping,
     struct_parser,
 )
-from compacto.utils.constants import SIZE_LONG_LONG, UNSIGNED_LONG_TYPE_TOKEN
 
 from typing_extensions import Tuple
-
-import pickle
-import struct
 
 
 class ObjectEncoder(TypeEncoder[object]):
     mapped_type = object
 
     @staticmethod
-    def encode(value: object) -> bytes:
-        typing_tree = struct_parser(value)
-
-        if isinstance(typing_tree.data, FallbackPickle):
-            data = pickle.dumps(value)
-            len_data = len(data)
-            return struct.pack(UNSIGNED_LONG_TYPE_TOKEN, len_data) + data
-
-        data = b""
-        for node in typing_tree:
-            node_data = node.data
+    def encode(node: TreeNode[StructTyping], value: object) -> bytes:
+        data = bytearray()
+        for child_node in node:
+            node_data = child_node.data
             encoder = TypeEncoder.get_implementation(node_data.field_type)
             if encoder is None:
                 raise TypeError(f"Unsupported field type: {node_data.field_type}")
 
-            data += encoder.encode(getattr(value, node_data.name))
+            data.extend(encoder.encode(child_node, getattr(value, node_data.name)))
 
         return data
 
@@ -41,11 +29,6 @@ class ObjectEncoder(TypeEncoder[object]):
         clzz: type = node.data.field_type
 
         typing_tree = struct_parser(clzz)
-
-        if isinstance(typing_tree.data, FallbackPickle):
-            (len_data,) = struct.unpack_from(UNSIGNED_LONG_TYPE_TOKEN, data)
-            data = pickle.loads(data[SIZE_LONG_LONG:len_data])
-            return data, SIZE_LONG_LONG + len_data
 
         fields: dict[str, object] = {}
         offset = 0

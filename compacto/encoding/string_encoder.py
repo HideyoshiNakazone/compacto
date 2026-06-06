@@ -12,7 +12,7 @@ class StringEncoder(TypeEncoder[str]):
     mapped_type = str
 
     @staticmethod
-    def encode(value: str) -> bytes:
+    def encode(node: TreeNode[StructTyping], value: str) -> bytes:
         encoded = value.encode("utf-8")
         buf = bytearray(SIZE_UNSIGNED_LONG + len(encoded))
         struct.pack_into(UNSIGNED_LONG_TYPE_TOKEN, buf, 0, len(encoded))

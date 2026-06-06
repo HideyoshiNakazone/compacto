@@ -11,7 +11,7 @@
 
 **compacto** turns Python objects into compact binary data and back, using type annotations to drive the encoding/decoding process — no schemas, no decorators, just plain annotated classes.
 
-It leverages Python's `struct` module for fixed-size primitive types and falls back to `pickle` for types it can't represent natively (e.g. `dict` or classes without full annotations).
+It leverages Python's `struct` module for fixed-size primitive types. All fields must be fully annotated and use supported types — unsupported types raise a `TypeError` at encode time, keeping the output strictly cross-language compatible.
 
 ---
 
@@ -61,8 +61,8 @@ assert result.y == p.y
 | `str`       | Length-prefixed UTF-8 |
 | `bytes`     | Length-prefixed raw bytes |
 | `list[T]`   | Length-prefixed sequence of `T` |
+| `Optional[T]` | 1-byte presence flag + encoded `T` when present |
 | Annotated class | Recursively encoded fields |
-| Everything else | Pickle fallback |
 
 ---
 
@@ -92,6 +92,30 @@ result = unpack(Person, data)
 
 assert result.name == person.name
 assert result.address == person.address
+```
+
+---
+
+## Optional Fields
+
+Fields annotated with `Optional[T]` (or `T | None`) are encoded with a 1-byte presence flag followed by the encoded value when present:
+
+```python
+from dataclasses import dataclass
+from typing import Optional
+from compacto import pack, unpack
+
+@dataclass
+class Profile:
+    username: str
+    bio: Optional[str]
+
+p = Profile("alice", None)
+data = pack(p)
+result = unpack(Profile, data)
+
+assert result.username == p.username
+assert result.bio is None
 ```
 
 ---
@@ -138,8 +162,8 @@ obj = unpack(MyClass, data)
 ## How It Works
 
 1. **Struct parsing** — compacto inspects the type annotations of your class and builds a typed tree of fields.
-2. **Encoding** — each field is encoded using the appropriate encoder (int, float, str, etc.).
-3. **Fallback** — types that can't be represented natively (e.g. `dict`, unannotated classes) are serialized via `pickle`.
+2. **Encoding** — each field is encoded using the appropriate encoder (int, float, str, Optional, etc.).
+3. **Strict** — unsupported types (e.g. `dict`, unannotated classes) raise a `TypeError`, ensuring the output is always cross-language compatible.
 
 ---
 
@@ -151,10 +175,15 @@ uv sync
 
 # Run tests
 uv run poe tests
-
-# Type checking
-uv run poe type-check
 ```
+
+---
+
+## Roadmap
+
+- [ ] `Enum` — encode as underlying integer value for cross-language compatibility
+- [ ] Endianness control — allow specifying byte order (big/little/native) for cross-language interop
+- [ ] Magic bytes / format version header — safe cross-language deserialization
 
 ---
 

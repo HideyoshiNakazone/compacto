@@ -12,7 +12,7 @@ class IntEncoder(TypeEncoder[int]):
     mapped_type = int
 
     @staticmethod
-    def encode(value: int) -> bytes:
+    def encode(node: TreeNode[StructTyping], value: int) -> bytes:
         return struct.pack(LONG_LONG_TYPE_TOKEN, value)
 
     @staticmethod

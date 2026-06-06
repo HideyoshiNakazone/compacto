@@ -1,5 +1,7 @@
 from compacto import pack, unpack
 
+from typing_extensions import Optional
+
 from dataclasses import dataclass
 
 
@@ -16,8 +18,9 @@ def test_pack_unpack() -> None:
         c: list[str]
 
         d: SubData
+        e: Optional[SubData]
 
-    obj = DataWrapper(42, "teste", ["a", "b", "c"], SubData(1, 2))
+    obj = DataWrapper(42, "teste", ["a", "b", "c"], SubData(1, 2), None)
     data = pack(obj)
 
     unpacked_obj = unpack(DataWrapper, data)
@@ -26,3 +29,13 @@ def test_pack_unpack() -> None:
     assert unpacked_obj.b == obj.b
     assert unpacked_obj.c == obj.c
     assert unpacked_obj.d == obj.d
+    assert unpacked_obj.e == obj.e
+
+
+def test_pack_unpack_on_native_types() -> None:
+    ORIGINAL_DATA = 42
+
+    data = pack(ORIGINAL_DATA)
+    unpacked_data = unpack(int, data)
+
+    assert unpacked_data == ORIGINAL_DATA
