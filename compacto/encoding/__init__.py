@@ -4,6 +4,7 @@ from .float_encoder import FloatEncoder
 from .int_encoder import IntEncoder
 from .list_encoder import ListEncoder
 from .object_encoder import ObjectEncoder
+from .optional_encoder import OptionalEncoder
 from .string_encoder import StringEncoder
 from .type_encoder import TypeEncoder
 
@@ -15,6 +16,7 @@ __all__ = [
     IntEncoder,
     ListEncoder,
     ObjectEncoder,
+    OptionalEncoder,
     StringEncoder,
     TypeEncoder,
 ]

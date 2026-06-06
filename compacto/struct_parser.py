@@ -2,6 +2,7 @@ from compacto.internal_types import HasAnnotations, TreeNode
 
 from typing_extensions import (
     Generic,
+    Optional,
     Self,
     TypeVar,
     get_args,
@@ -10,12 +11,15 @@ from typing_extensions import (
 )
 
 from dataclasses import dataclass
+from types import NoneType
+from typing import Union
 
 
 T = TypeVar("T", bound=HasAnnotations)
 
 
 class _GenericTypeDeff(Generic[T]):
+    name: str
     field_type: type
 
     def to_tree_node(self) -> TreeNode[Self]:
@@ -39,6 +43,12 @@ class ListDeff(_GenericTypeDeff[T]):
 class FieldsDeff(_GenericTypeDeff[T]):
     name: str
     field_type: type
+
+
+@dataclass
+class OptionalDeff(_GenericTypeDeff[T]):
+    name: str
+    field_type = Optional
 
 
 StructTyping = StructDeff | FieldsDeff | ListDeff
@@ -88,6 +98,17 @@ def _parse_type(field_name: str, field_type: type) -> TreeNode[StructTyping]:
             ListDeff(name=field_name)
             .to_tree_node()
             .add_child(_parse_type("_element", get_args(field_type)[0]))
+        )
+
+    if (
+        origin is Union
+        and len(type_args := get_args(field_type)) == 2
+        and type_args[1] is NoneType
+    ):
+        return (
+            OptionalDeff(name=field_name)
+            .to_tree_node()
+            .add_child(_parse_type("_element", type_args[0]))
         )
 
     if origin is dict:
