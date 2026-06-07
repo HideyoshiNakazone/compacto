@@ -1,6 +1,8 @@
 from compacto.encoding.type_encoder import TypeEncoder
 from compacto.struct_parser import ListDeff, StructTyping
-from compacto.utils.constants import SIZE_UNSIGNED_LONG, UNSIGNED_LONG_TYPE_TOKEN
+from compacto.utils.constants import (
+    InternalTypes,
+)
 from compacto.utils.tree_node import TreeNode
 
 from typing_extensions import Tuple
@@ -31,7 +33,10 @@ class ListEncoder(TypeEncoder[list]):
         for ele_value in value:
             encoded_elements.extend(child_encoder.encode(child_node, ele_value))
 
-        return struct.pack(UNSIGNED_LONG_TYPE_TOKEN, len(value)) + encoded_elements
+        return (
+            struct.pack(InternalTypes.UINT64.get_struct_token(), len(value))
+            + encoded_elements
+        )
 
     @staticmethod
     def decode(node: TreeNode[StructTyping], data: bytes) -> Tuple[list, int]:
@@ -50,9 +55,9 @@ class ListEncoder(TypeEncoder[list]):
             raise RuntimeError("Failed to determine the type of list element.")
 
         data = memoryview(data)
-        (arr_len,) = struct.unpack_from(UNSIGNED_LONG_TYPE_TOKEN, data)
+        (arr_len,) = struct.unpack_from(InternalTypes.UINT64.get_struct_token(), data)
 
-        offset = SIZE_UNSIGNED_LONG
+        offset = InternalTypes.UINT64.get_byte_size()
         arr_elements = []
 
         for _ in range(arr_len):

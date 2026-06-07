@@ -1,5 +1,8 @@
 from compacto.encoding.bool_encoder import BoolEncoder
-from compacto.utils.constants import SIZE_BOOL
+from compacto.utils.constants import InternalTypes
+
+
+SIZE_BOOL = InternalTypes.BOOL.get_byte_size()
 
 
 class TestBoolEncoder:

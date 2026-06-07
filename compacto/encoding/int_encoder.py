@@ -1,6 +1,6 @@
 from compacto.encoding.type_encoder import TypeEncoder
 from compacto.struct_parser import StructTyping
-from compacto.utils.constants import LONG_LONG_TYPE_TOKEN, SIZE_LONG_LONG
+from compacto.utils.constants import InternalTypes
 from compacto.utils.tree_node import TreeNode
 
 from typing_extensions import Tuple
@@ -13,9 +13,9 @@ class IntEncoder(TypeEncoder[int]):
 
     @staticmethod
     def encode(node: TreeNode[StructTyping], value: int) -> bytes:
-        return struct.pack(LONG_LONG_TYPE_TOKEN, value)
+        return struct.pack(InternalTypes.INT_64.get_struct_token(), value)
 
     @staticmethod
     def decode(_: TreeNode[StructTyping], data: bytes) -> Tuple[int, int]:
-        (value,) = struct.unpack_from(LONG_LONG_TYPE_TOKEN, data)
-        return value, SIZE_LONG_LONG
+        (value,) = struct.unpack_from(InternalTypes.INT_64.get_struct_token(), data)
+        return value, InternalTypes.INT_64.get_byte_size()

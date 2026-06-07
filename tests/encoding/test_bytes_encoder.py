@@ -1,5 +1,8 @@
 from compacto.encoding.bytes_encoder import ByteEncoder
-from compacto.utils.constants import SIZE_UNSIGNED_LONG
+from compacto.utils.constants import InternalTypes
+
+
+SIZE_UNSIGNED_LONG_LONG = InternalTypes.UINT64.get_byte_size()
 
 
 class TestByteEncoder:
@@ -29,4 +32,4 @@ class TestByteEncoder:
         data = ByteEncoder.encode(..., value)
         _, offset = ByteEncoder.decode(..., data)
 
-        assert offset == SIZE_UNSIGNED_LONG + len(value)
+        assert offset == SIZE_UNSIGNED_LONG_LONG + len(value)

@@ -1,6 +1,8 @@
 from compacto.encoding.type_encoder import TypeEncoder
 from compacto.struct_parser import StructTyping
-from compacto.utils.constants import SIZE_UNSIGNED_LONG, UNSIGNED_LONG_TYPE_TOKEN
+from compacto.utils.constants import (
+    InternalTypes,
+)
 from compacto.utils.tree_node import TreeNode
 
 from typing_extensions import Tuple
@@ -14,14 +16,16 @@ class StringEncoder(TypeEncoder[str]):
     @staticmethod
     def encode(node: TreeNode[StructTyping], value: str) -> bytes:
         encoded = value.encode("utf-8")
-        buf = bytearray(SIZE_UNSIGNED_LONG + len(encoded))
-        struct.pack_into(UNSIGNED_LONG_TYPE_TOKEN, buf, 0, len(encoded))
-        buf[SIZE_UNSIGNED_LONG:] = encoded
+        buf = bytearray(InternalTypes.UINT64.get_byte_size() + len(encoded))
+        struct.pack_into(InternalTypes.UINT64.get_struct_token(), buf, 0, len(encoded))
+        buf[InternalTypes.UINT64.get_byte_size() :] = encoded
         return bytes(buf)
 
     @staticmethod
     def decode(_: TreeNode[StructTyping], data: bytes) -> Tuple[str, int]:
         data = memoryview(data)
-        (length,) = struct.unpack_from(UNSIGNED_LONG_TYPE_TOKEN, data)
-        data = data[SIZE_UNSIGNED_LONG:]
-        return data[:length].tobytes().decode("utf-8"), SIZE_UNSIGNED_LONG + length
+        (length,) = struct.unpack_from(InternalTypes.UINT64.get_struct_token(), data)
+        data = data[InternalTypes.UINT64.get_byte_size() :]
+        return data[:length].tobytes().decode(
+            "utf-8"
+        ), InternalTypes.UINT64.get_byte_size() + length

@@ -1,5 +1,8 @@
 from compacto.encoding.float_encoder import FloatEncoder
-from compacto.utils.constants import SIZE_DOUBLE
+from compacto.utils.constants import InternalTypes
+
+
+SIZE_DOUBLE = InternalTypes.DOUBLE.get_byte_size()
 
 
 class TestFloatEncoder:

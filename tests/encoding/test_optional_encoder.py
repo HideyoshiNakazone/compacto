@@ -1,6 +1,6 @@
 from compacto.encoding.optional_encoder import OptionalEncoder
 from compacto.struct_parser import FieldsDeff, OptionalDeff, StructTyping, struct_parser
-from compacto.utils.constants import BOOL_TYPE_TOKEN, SIZE_BOOL
+from compacto.utils.constants import InternalTypes
 from compacto.utils.tree_node import TreeNode
 
 import pytest
@@ -8,6 +8,10 @@ from typing_extensions import Optional
 
 import struct
 from dataclasses import dataclass
+
+
+SIZE_BOOL = InternalTypes.BOOL.get_byte_size()
+BOOL_TYPE_TOKEN = InternalTypes.BOOL.get_struct_token()
 
 
 @dataclass
