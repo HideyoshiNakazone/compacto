@@ -1,7 +1,8 @@
 from compacto import pack, unpack
 
-from typing_extensions import Optional
+from typing_extensions import Annotated, Optional
 
+import ctypes
 from dataclasses import dataclass
 
 
@@ -39,3 +40,17 @@ def test_pack_unpack_on_native_types() -> None:
     unpacked_data = unpack(int, data)
 
     assert unpacked_data == ORIGINAL_DATA
+
+
+def test_pack_unpack_with_precision() -> None:
+    @dataclass
+    class Data:
+        a: Annotated[int, ctypes.c_int16]
+        b: Annotated[int, ctypes.c_int32]
+
+    obj = Data(42, 100000)
+    data = pack(obj)
+    unpacked_obj = unpack(Data, data)
+
+    assert unpacked_obj.a == obj.a
+    assert unpacked_obj.b == obj.b

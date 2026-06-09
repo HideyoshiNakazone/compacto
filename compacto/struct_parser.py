@@ -2,9 +2,18 @@ from compacto.utils.annotations import HasAnnotations
 from compacto.utils.constants import Ctype, InternalType, InternalTypes
 from compacto.utils.tree_node import TreeNode
 
-from typing_extensions import TypeVar, Union, get_args, get_origin, get_type_hints
+from typing_extensions import (
+    Annotated,
+    TypeVar,
+    Union,
+    get_args,
+    get_origin,
+    get_type_hints,
+)
 
+import ctypes
 from dataclasses import dataclass
+from typing import Iterable, Type
 
 
 T = TypeVar("T", bound=HasAnnotations)
@@ -64,9 +73,30 @@ StructTyping = Union[
 ]
 
 
+@dataclass
+class TypeMetadata:
+    type: Type
+    args: Iterable[Type]
+    annotation: Type[ctypes._SimpleCData] | None = None
+
+
 def _get_origin_type(field_type: type) -> type:
     """Unwrap generic aliases like list[int] → list."""
     return get_origin(field_type) or field_type
+
+
+def _get_type_metadata(field_type: type) -> TypeMetadata:
+    origin = get_origin(field_type) or field_type
+    type_args = get_args(field_type)
+
+    if origin is Annotated:
+        return TypeMetadata(
+            type_args[0],
+            (),
+            type_args[1],
+        )
+
+    return TypeMetadata(origin, type_args)
 
 
 def _is_valid_annotation(clzz: type[T], annotations: dict[str, type] | None) -> bool:
@@ -101,10 +131,11 @@ def _is_buildable_class(clzz: type[T], annotations: dict[str, type] | None) -> b
 
 
 def _parse_type(field_name: str, field_type: type) -> TreeNode[StructTyping]:
-    origin = _get_origin_type(field_type)
-    type_args = get_args(field_type)
+    type_metadata = _get_type_metadata(field_type)
 
-    internal_type = InternalTypes.get_from_type(origin, type_args)
+    internal_type = InternalTypes.get_from_type(
+        type_metadata.type, type_metadata.args, ctype=type_metadata.annotation
+    )
 
     match internal_type:
         case InternalTypes.BYTES:
@@ -117,18 +148,18 @@ def _parse_type(field_name: str, field_type: type) -> TreeNode[StructTyping]:
             return (
                 ListDeff(field_name=field_name)
                 .to_tree_node()
-                .add_child(_parse_type("_element", type_args[0]))
+                .add_child(_parse_type("_element", type_metadata.args[0]))
             )
 
         case InternalTypes.OPTIONAL:
             return (
                 OptionalDeff(field_name=field_name)
                 .to_tree_node()
-                .add_child(_parse_type("_element", type_args[0]))
+                .add_child(_parse_type("_element", type_metadata.args[0]))
             )
 
         case InternalTypes.OBJECT:
-            annotated_fields = get_type_hints(field_type)
+            annotated_fields = get_type_hints(field_type, include_extras=True)
             if (
                 not annotated_fields
                 or not _is_valid_annotation(field_type, annotated_fields)
