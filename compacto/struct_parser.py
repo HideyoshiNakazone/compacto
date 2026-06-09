@@ -175,10 +175,13 @@ def _parse_type(field_name: str, field_type: type) -> TreeNode[StructTyping]:
                 )
             )
 
-        case _:
+        case _ if isinstance(internal_type.value, Ctype):
             return FieldsDeff(
                 field_name=field_name, field_impl=internal_type.value
             ).to_tree_node()
+
+        case _:
+            raise TypeError(f"No parser defined for internal type: {internal_type}")
 
 
 def struct_parser(obj_or_clzz: T | type[T]) -> TreeNode[StructTyping]:
