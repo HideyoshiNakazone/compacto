@@ -13,12 +13,10 @@ from typing_extensions import (
 
 import ctypes
 from dataclasses import dataclass
-from typing import Iterable, Type
+from typing import Type
 
 
 T = TypeVar("T", bound=HasAnnotations)
-
-K = TypeVar("K")
 
 
 class _GenericTypeDeff:
@@ -76,27 +74,34 @@ StructTyping = Union[
 @dataclass
 class TypeMetadata:
     type: Type
-    args: Iterable[Type]
+    args: tuple[Type, ...]
     annotation: Type[ctypes._SimpleCData] | None = None
 
 
-def _get_origin_type(field_type: type) -> type:
-    """Unwrap generic aliases like list[int] → list."""
-    return get_origin(field_type) or field_type
+def _unwrap_annotated(
+    field_type: type,
+) -> tuple[type, Type[ctypes._SimpleCData] | None]:
+    if get_origin(field_type) is Annotated:
+        args = get_args(field_type)
+
+        if not (isinstance(args[1], type) and issubclass(args[1], ctypes._SimpleCData)):
+            raise TypeError(
+                "Only type ctypes are permited as annotations, a instance is not accepted, "
+                "e.g. Annotated[int, ctypes.c_int32] is valid, but Annotated[int, ctypes.c_int32()] is not."
+            )
+
+        return args[0], args[1]
+
+    return field_type, None
 
 
 def _get_type_metadata(field_type: type) -> TypeMetadata:
-    origin = get_origin(field_type) or field_type
-    type_args = get_args(field_type)
-
-    if origin is Annotated:
-        return TypeMetadata(
-            type_args[0],
-            (),
-            type_args[1],
-        )
-
-    return TypeMetadata(origin, type_args)
+    inner, annotation = _unwrap_annotated(field_type)
+    return TypeMetadata(
+        type=get_origin(inner) or inner,
+        args=get_args(inner),
+        annotation=annotation,
+    )
 
 
 def _get_validated_annotations(clzz: type) -> dict[str, type]:
@@ -144,6 +149,8 @@ def _parse_type(field_name: str, field_type: type) -> TreeNode[StructTyping]:
             return StringDeff(field_name=field_name).to_tree_node()
 
         case InternalTypes.LIST:
+            if not type_metadata.args:
+                raise TypeError("list fields must have a type argument, e.g. list[int]")
             return (
                 ListDeff(field_name=field_name)
                 .to_tree_node()
@@ -151,10 +158,19 @@ def _parse_type(field_name: str, field_type: type) -> TreeNode[StructTyping]:
             )
 
         case InternalTypes.OPTIONAL:
+            if not type_metadata.args:
+                raise TypeError(
+                    "optional fields must have a type argument, e.g. Optional[int] or int | None"
+                )
+            inner_args = [a for a in type_metadata.args if a is not type(None)]
+            if len(inner_args) != 1:
+                raise TypeError(
+                    "optional fields must wrap exactly one type, e.g. Optional[int]"
+                )
             return (
                 OptionalDeff(field_name=field_name)
                 .to_tree_node()
-                .add_child(_parse_type("_element", type_metadata.args[0]))
+                .add_child(_parse_type("_element", inner_args[0]))
             )
 
         case InternalTypes.OBJECT:
