@@ -1,4 +1,5 @@
-from compacto import pack, unpack
+from compacto import PROTOCOL_VERSION, inspect, pack, unpack
+from compacto.encoding_headers import EncodingHeader
 
 import pytest
 from typing_extensions import Annotated, Optional
@@ -95,3 +96,98 @@ class TestSerialization:
 
         with pytest.raises(ValueError):
             _ = unpack(Data2, data)
+
+
+class TestInspect:
+    def test_inspect_bytes_returns_encoding_header(self) -> None:
+        @dataclass
+        class Point:
+            x: float
+            y: float
+
+        data = pack(Point(1.0, 2.0))
+        header = inspect(data)
+
+        assert isinstance(header, EncodingHeader)
+
+    def test_inspect_bytes_has_correct_version(self) -> None:
+        @dataclass
+        class Point:
+            x: float
+            y: float
+
+        data = pack(Point(1.0, 2.0))
+        header = inspect(data)
+
+        assert header.version == PROTOCOL_VERSION
+
+    def test_inspect_type_returns_encoding_header(self) -> None:
+        @dataclass
+        class Point:
+            x: float
+            y: float
+
+        header = inspect(Point)
+
+        assert isinstance(header, EncodingHeader)
+
+    def test_inspect_type_has_correct_version(self) -> None:
+        @dataclass
+        class Point:
+            x: float
+            y: float
+
+        header = inspect(Point)
+
+        assert header.version == PROTOCOL_VERSION
+
+    def test_inspect_type_and_bytes_yield_same_schema_hash(self) -> None:
+        @dataclass
+        class Point:
+            x: float
+            y: float
+
+        data = pack(Point(1.0, 2.0))
+        header_from_bytes = inspect(data)
+        header_from_type = inspect(Point)
+
+        assert header_from_bytes.schema_hash == header_from_type.schema_hash
+
+    def test_inspect_different_structs_yield_different_schema_hashes(self) -> None:
+        @dataclass
+        class A:
+            x: int
+
+        @dataclass
+        class B:
+            x: float
+
+        assert inspect(A).schema_hash != inspect(B).schema_hash
+
+    def test_inspect_struct_field_order_affects_schema_hash(self) -> None:
+        @dataclass
+        class AB:
+            a: int
+            b: float
+
+        @dataclass
+        class BA:
+            b: float
+            a: int
+
+        assert inspect(AB).schema_hash != inspect(BA).schema_hash
+
+    def test_inspect_invalid_input_raises_type_error(self) -> None:
+        with pytest.raises(TypeError):
+            inspect(42)  # type: ignore[arg-type]
+
+    def test_inspect_with_ctypes_annotation_differs_from_default(self) -> None:
+        @dataclass
+        class Precise:
+            a: Annotated[int, ctypes.c_int16]
+
+        @dataclass
+        class Default:
+            a: int
+
+        assert inspect(Precise).schema_hash != inspect(Default).schema_hash

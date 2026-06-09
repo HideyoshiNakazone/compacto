@@ -14,6 +14,17 @@ PROTOCOL_VERSION = 1
 T = TypeVar("T", bound=HasAnnotations)
 
 
+def inspect(pos_data: type[T] | bytes) -> EncodingHeader:
+    if isinstance(pos_data, (bytes, bytearray, memoryview)):
+        return EncodingHeader.decode(pos_data)
+
+    if not isinstance(pos_data, type):
+        raise TypeError("Expected a type or bytes data for inspection.")
+
+    typing_tree = struct_parser(pos_data)
+    return EncodingHeader.from_params(PROTOCOL_VERSION, typing_tree)
+
+
 def pack(obj: T) -> bytes:
     typing_tree = struct_parser(type(obj))
     header = EncodingHeader.from_params(PROTOCOL_VERSION, typing_tree)
