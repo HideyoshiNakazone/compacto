@@ -8,8 +8,10 @@ import struct
 from dataclasses import dataclass
 
 
-ENCODING_HASH_SIZE = 8
-SIZE_OF_VERSION_BYTES = struct.calcsize(">I")
+ENCODING_HASH_SIZE = 4
+
+VERSION_ENCODING_TOKEN = ">H"
+SIZE_OF_VERSION_BYTES = struct.calcsize(VERSION_ENCODING_TOKEN)
 
 
 def calc_hash_from_tree(typing_tree: TreeNode[StructTyping]) -> bytes:
@@ -31,17 +33,17 @@ def calc_hash_from_tree(typing_tree: TreeNode[StructTyping]) -> bytes:
 @dataclass
 class EncodingHeader:
     version: int
-    hash: bytes
+    schema_hash: bytes
 
     def encode(self) -> bytearray:
         data = bytearray()
-        data.extend(struct.pack(">I", self.version))
-        data.extend(self.hash)  # raw bytes, no struct.pack
+        data.extend(struct.pack(VERSION_ENCODING_TOKEN, self.version))
+        data.extend(self.schema_hash)  # raw bytes, no struct.pack
         return data
 
     @classmethod
     def decode(cls, data: bytes) -> Self:
-        version = struct.unpack(">I", data[:SIZE_OF_VERSION_BYTES])[0]
+        version = struct.unpack(VERSION_ENCODING_TOKEN, data[:SIZE_OF_VERSION_BYTES])[0]
         type_hash = data[
             SIZE_OF_VERSION_BYTES : SIZE_OF_VERSION_BYTES + ENCODING_HASH_SIZE
         ]

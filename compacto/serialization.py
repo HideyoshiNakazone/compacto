@@ -36,7 +36,7 @@ def unpack(clzz: type[T], data: bytes) -> T:
             f"Protocol version mismatch: expected {expected.version}, got {header.version}"
         )
 
-    if header.hash != expected.hash:
+    if header.schema_hash != expected.schema_hash:
         raise ValueError(
             "Schema mismatch: the binary data was encoded with a different struct layout."
         )

@@ -210,6 +210,52 @@ obj = unpack(MyClass, data)
 
 ---
 
+## Size Comparison
+
+| Format                        | Size     |
+|-------------------------------|----------|
+| compacto (ctypes annotations) | 12 bytes |
+| compacto (default precision)  | 18 bytes |
+| pickle                        | 27 bytes |
+
+> Note: pickle is not compacto's real competition — compacto targets fixed-schema, cross-language binary serialization where output size and type strictness matter. Think C structs over the wire, not Python object persistence.
+
+<details>
+<summary>Show benchmark code</summary>
+
+```python
+import ctypes
+import pickle
+from dataclasses import dataclass
+from typing_extensions import Annotated
+from compacto import pack
+
+@dataclass
+class Data1:
+    a: Annotated[int, ctypes.c_int16]
+    b: Annotated[float, ctypes.c_float]
+
+@dataclass
+class Data2:
+    a: int
+    b: float
+
+obj1 = Data1(42, 3.14)
+obj2 = Data2(42, 3.14)
+
+data1 = pack(obj1)
+data2 = pack(obj2)
+data_pickled = pickle.dumps(data1)
+
+print(f"compacto (annotated): {len(data1)} bytes")
+print(f"compacto (default):   {len(data2)} bytes")
+print(f"pickle:               {len(data_pickled)} bytes")
+```
+
+</details>
+
+---
+
 ## Development
 
 ```bash
@@ -226,7 +272,6 @@ uv run poe tests
 
 - [ ] `Enum` — encode as underlying integer value for cross-language compatibility
 - [ ] Endianness control — allow specifying byte order (big/little/native) for cross-language interop
-- [ ] Magic bytes / format version header — safe cross-language deserialization
 
 ---
 
