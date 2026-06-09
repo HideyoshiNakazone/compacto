@@ -8,8 +8,12 @@ import struct
 from dataclasses import dataclass
 
 
+ENCODING_HASH_SIZE = 8
+SIZE_OF_VERSION_BYTES = struct.calcsize(">I")
+
+
 def calc_hash_from_tree(typing_tree: TreeNode[StructTyping]) -> bytes:
-    h = hashlib.sha256()
+    h = hashlib.blake2b(digest_size=ENCODING_HASH_SIZE)
 
     deff = typing_tree.data
     h.update(type(deff).__name__.encode())
@@ -37,8 +41,10 @@ class EncodingHeader:
 
     @classmethod
     def decode(cls, data: bytes) -> Self:
-        version = struct.unpack(">I", data[:4])[0]
-        type_hash = data[4 : 4 + 32]  # sha256 is 32 bytes
+        version = struct.unpack(">I", data[:SIZE_OF_VERSION_BYTES])[0]
+        type_hash = data[
+            SIZE_OF_VERSION_BYTES : SIZE_OF_VERSION_BYTES + ENCODING_HASH_SIZE
+        ]
         return cls(version, type_hash)
 
     @classmethod
@@ -48,4 +54,4 @@ class EncodingHeader:
 
     @property
     def size_of_header(self) -> int:
-        return struct.calcsize(">I") + 32  # version + sha256
+        return SIZE_OF_VERSION_BYTES + ENCODING_HASH_SIZE  # version + sha256
