@@ -1,4 +1,8 @@
-from .serialization import pack, unpack
+from .serialization import PROTOCOL_VERSION, pack, unpack
 
 
-__all__ = ["pack", "unpack"]
+__all__ = [
+    "PROTOCOL_VERSION",
+    "pack",
+    "unpack",
+]
