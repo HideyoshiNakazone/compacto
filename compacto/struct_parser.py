@@ -99,35 +99,34 @@ def _get_type_metadata(field_type: type) -> TypeMetadata:
     return TypeMetadata(origin, type_args)
 
 
-def _is_valid_annotation(clzz: type[T], annotations: dict[str, type] | None) -> bool:
-    if annotations is None:
-        return False
+def _get_validated_annotations(clzz: type) -> dict[str, type]:
+    hints = get_type_hints(clzz, include_extras=True)
+    if not hints:
+        raise TypeError(f"{clzz.__name__} has no annotated fields.")
 
-    all_attrs = [
-        attr
-        for attr in dir(clzz)
-        if not attr.startswith("__") and not callable(getattr(clzz, attr))
-    ]
-    for field in all_attrs:
-        if field not in annotations:
-            return False
+    # Detect bare class attributes that aren't annotated
+    unannotated = {
+        k
+        for k, v in vars(clzz).items()
+        if not k.startswith("__")
+        and not callable(v)
+        and not isinstance(v, (classmethod, staticmethod, property))
+        and k not in hints
+    }
+    if unannotated:
+        raise TypeError(
+            f"{clzz.__name__} has unannotated class attributes: {unannotated}. "
+            "All fields must be annotated."
+        )
 
-    return True
+    init_params = {k for k in get_type_hints(clzz.__init__) if k != "return"}
+    missing = init_params - hints.keys()
+    if missing:
+        raise TypeError(
+            f"{clzz.__name__}.__init__ references unannotated fields: {missing}"
+        )
 
-
-def _is_buildable_class(clzz: type[T], annotations: dict[str, type] | None) -> bool:
-    if annotations is None:
-        return False
-
-    constructor_annotations = get_type_hints(clzz.__init__)
-    if constructor_annotations is None:
-        return False
-
-    return all(
-        (field in annotations)
-        for field in constructor_annotations.keys()
-        if field != "return"
-    )
+    return hints
 
 
 def _parse_type(field_name: str, field_type: type) -> TreeNode[StructTyping]:
@@ -159,16 +158,7 @@ def _parse_type(field_name: str, field_type: type) -> TreeNode[StructTyping]:
             )
 
         case InternalTypes.OBJECT:
-            annotated_fields = get_type_hints(field_type, include_extras=True)
-            if (
-                not annotated_fields
-                or not _is_valid_annotation(field_type, annotated_fields)
-                or not _is_buildable_class(field_type, annotated_fields)
-            ):
-                raise TypeError(
-                    "The provided type or doesn't have a __annotations__ attribute or doesn't have a compatible __init__ method. "
-                    "Ensure that all fields are annotated and that the class can be instantiated with those fields."
-                )
+            annotated_fields = _get_validated_annotations(field_type)
 
             return (
                 ObjectDeff(
