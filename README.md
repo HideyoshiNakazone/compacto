@@ -66,6 +66,49 @@ assert result.y == p.y
 
 ---
 
+## Precision Control via ctypes Annotations
+
+By default, `int` is encoded as a 64-bit signed integer and `float` as a 64-bit double. You can override this per-field using `Annotated` with a `ctypes` type to control the exact binary representation:
+
+```python
+from dataclasses import dataclass
+from typing_extensions import Annotated
+import ctypes
+from compacto import pack, unpack
+
+@dataclass
+class Measurement:
+    small: Annotated[int, ctypes.c_int16]   # 2 bytes
+    medium: Annotated[int, ctypes.c_int32]  # 4 bytes
+    precise: Annotated[float, ctypes.c_float]  # 4 bytes (single precision)
+
+obj = Measurement(42, 100000, 3.14)
+data = pack(obj)
+result = unpack(Measurement, data)
+```
+
+### Permitted ctypes
+
+| ctypes type        | Python type | Size    |
+|--------------------|-------------|---------|
+| `ctypes.c_bool`    | `bool`      | 1 byte  |
+| `ctypes.c_int8`    | `int`       | 1 byte  |
+| `ctypes.c_int16`   | `int`       | 2 bytes |
+| `ctypes.c_int32`   | `int`       | 4 bytes |
+| `ctypes.c_int64`   | `int`       | 8 bytes |
+| `ctypes.c_uint8`   | `int`       | 1 byte  |
+| `ctypes.c_uint16`  | `int`       | 2 bytes |
+| `ctypes.c_uint32`  | `int`       | 4 bytes |
+| `ctypes.c_uint64`  | `int`       | 8 bytes |
+| `ctypes.c_uint`    | `int`       | 4 bytes |
+| `ctypes.c_int`     | `int`       | 4 bytes |
+| `ctypes.c_float`   | `float`     | 4 bytes |
+| `ctypes.c_double`  | `float`     | 8 bytes |
+
+> Using a ctypes type not in the list above will raise a `TypeError` at encode time.
+
+---
+
 ## Nested Objects
 
 compacto handles nested annotated classes out of the box:
@@ -167,6 +210,52 @@ obj = unpack(MyClass, data)
 
 ---
 
+## Size Comparison
+
+| Format                        | Size     |
+|-------------------------------|----------|
+| compacto (ctypes annotations) | 12 bytes |
+| compacto (default precision)  | 18 bytes |
+| pickle                        | 27 bytes |
+
+> Note: pickle is not compacto's real competition — compacto targets fixed-schema, cross-language binary serialization where output size and type strictness matter. Think C structs over the wire, not Python object persistence.
+
+<details>
+<summary>Show benchmark code</summary>
+
+```python
+import ctypes
+import pickle
+from dataclasses import dataclass
+from typing_extensions import Annotated
+from compacto import pack
+
+@dataclass
+class Data1:
+    a: Annotated[int, ctypes.c_int16]
+    b: Annotated[float, ctypes.c_float]
+
+@dataclass
+class Data2:
+    a: int
+    b: float
+
+obj1 = Data1(42, 3.14)
+obj2 = Data2(42, 3.14)
+
+data1 = pack(obj1)
+data2 = pack(obj2)
+data_pickled = pickle.dumps(data1)
+
+print(f"compacto (annotated): {len(data1)} bytes")
+print(f"compacto (default):   {len(data2)} bytes")
+print(f"pickle:               {len(data_pickled)} bytes")
+```
+
+</details>
+
+---
+
 ## Development
 
 ```bash
@@ -183,7 +272,6 @@ uv run poe tests
 
 - [ ] `Enum` — encode as underlying integer value for cross-language compatibility
 - [ ] Endianness control — allow specifying byte order (big/little/native) for cross-language interop
-- [ ] Magic bytes / format version header — safe cross-language deserialization
 
 ---
 

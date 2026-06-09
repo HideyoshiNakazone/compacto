@@ -1,10 +1,6 @@
-from typing_extensions import Generic, Iterator, Protocol, Self, TypeVar
+from typing_extensions import Generic, Iterator, Self, TypeVar
 
 from dataclasses import dataclass
-
-
-class HasAnnotations(Protocol):
-    __annotations__: dict[str, type]
 
 
 V = TypeVar("V")
@@ -23,6 +19,12 @@ class TreeNode(Generic[V]):
     def add_child(self, child: Self) -> Self:
         child.parent = self
         self.children.append(child)
+        return self
+
+    def extend_children(self, children: list[Self]) -> Self:
+        for child in children:
+            child.parent = self
+        self.children.extend(children)
         return self
 
     def __iter__(self) -> Iterator[Self]:

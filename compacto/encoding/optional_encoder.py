@@ -1,15 +1,15 @@
 from compacto.encoding.type_encoder import TypeEncoder
-from compacto.internal_types import TreeNode
 from compacto.struct_parser import OptionalDeff, StructTyping
-from compacto.utils.constants import BOOL_TYPE_TOKEN, SIZE_BOOL
+from compacto.utils.constants import InternalTypes
+from compacto.utils.tree_node import TreeNode
 
 from typing_extensions import Any, Optional, Tuple
 
 import struct
 
 
-class OptionalEncoder(TypeEncoder[Optional]):
-    mapped_type = Optional
+class OptionalEncoder(TypeEncoder):
+    mapped_type = InternalTypes.OPTIONAL
 
     @staticmethod
     def encode(node: TreeNode[StructTyping], value: Optional[Any]) -> bytes:
@@ -28,11 +28,11 @@ class OptionalEncoder(TypeEncoder[Optional]):
             raise RuntimeError("Failed to determine the type of list element.")
 
         if value is None:
-            return struct.pack(BOOL_TYPE_TOKEN, False)
+            return struct.pack(InternalTypes.BOOL.get_struct_token(), False)
 
         data = bytearray()
 
-        data.extend(struct.pack(BOOL_TYPE_TOKEN, True))
+        data.extend(struct.pack(InternalTypes.BOOL.get_struct_token(), True))
         data.extend(child_encoder.encode(child_node, value))
 
         return data
@@ -53,8 +53,10 @@ class OptionalEncoder(TypeEncoder[Optional]):
         if not child_encoder:
             raise RuntimeError("Failed to determine the type of list element.")
 
-        (non_null_flag,) = struct.unpack_from(BOOL_TYPE_TOKEN, data)
-        offset = SIZE_BOOL
+        (non_null_flag,) = struct.unpack_from(
+            InternalTypes.BOOL.get_struct_token(), data
+        )
+        offset = InternalTypes.BOOL.get_byte_size()
 
         if not non_null_flag:
             return None, offset

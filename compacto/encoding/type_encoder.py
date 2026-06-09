@@ -1,5 +1,6 @@
-from compacto.internal_types import TreeNode
-from compacto.struct_parser import StructTyping, struct_parser
+from compacto.struct_parser import StructTyping
+from compacto.utils.constants import InternalTypes
+from compacto.utils.tree_node import TreeNode
 
 from typing_extensions import (
     ClassVar,
@@ -15,10 +16,10 @@ T = TypeVar("T")
 
 
 @runtime_checkable
-class TypeEncoder(Protocol[T]):
-    mapped_type: ClassVar[type]
+class TypeEncoder(Protocol):
+    mapped_type: ClassVar[InternalTypes]
 
-    __encoders__: dict[type, Self] = {}
+    __encoders__: dict[InternalTypes, Self] = {}
 
     @staticmethod
     def encode(node: TreeNode[StructTyping], value: T) -> bytes:
@@ -44,30 +45,33 @@ class TypeEncoder(Protocol[T]):
         super().__init_subclass__(**kwargs)
         if (mapped_type := getattr(cls, "mapped_type", None)) is None:
             raise TypeError(f"{cls.__name__} must have a 'mapped_type' attribute")
+
+        # if not isinstance(mapped_type, InternalType):
+        #     raise TypeError(f"{cls.__name__} must have a 'mapped_type' attribute")
+
         cls.__encoders__[mapped_type] = cls
 
     @classmethod
-    def get_implementation(cls, type_: type) -> Self | None:
-        encoder = cls.__encoders__.get(type_, None)
+    def get_implementation(cls, type_implementation: InternalTypes) -> Self | None:
+        encoder = cls.__encoders__.get(type_implementation, None)
         if encoder is not None:
             return encoder
-        return cls.__encoders__.get(object, None)
+        return cls.__encoders__.get(InternalTypes.OBJECT, None)
 
     @classmethod
-    def pack(cls, obj: T) -> bytes:
-        clzz = type(obj)
-        encoder = cls.get_implementation(clzz)
+    def pack(cls, typing_tree: TreeNode[StructTyping], obj: T) -> bytes:
+        encoder = cls.get_implementation(typing_tree.data.field_type)
         if encoder is None:
-            raise TypeError(f"Unsupported field type: {clzz.__name__}")
+            raise TypeError(f"Unsupported field type: {type(obj).__name__}")
 
-        typing_tree = struct_parser(clzz)
         return encoder.encode(typing_tree, obj)
 
     @classmethod
-    def unpack(cls, clzz: type[T], data: bytes) -> Tuple[T, int]:
-        encoder = cls.get_implementation(clzz)
+    def unpack(cls, typing_tree: TreeNode[StructTyping], data: bytes) -> Tuple[T, int]:
+        encoder = cls.get_implementation(typing_tree.data.field_type)
         if encoder is None:
-            raise TypeError(f"Unsupported field type: {clzz.__name__}")
+            raise TypeError(
+                f"Unsupported field type: {typing_tree.data.field_type.__name__}"
+            )
 
-        typing_tree = struct_parser(clzz)
         return encoder.decode(typing_tree, data)

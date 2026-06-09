@@ -1,41 +1,97 @@
 from compacto import pack, unpack
 
-from typing_extensions import Optional
+import pytest
+from typing_extensions import Annotated, Optional
 
+import ctypes
+import pickle
+import sys
 from dataclasses import dataclass
 
 
-def test_pack_unpack() -> None:
-    @dataclass
-    class SubData:
-        a: int
-        b: int
+class TestSerialization:
+    def test_pack_unpack(self) -> None:
+        @dataclass
+        class SubData:
+            a: int
+            b: int
 
-    @dataclass
-    class DataWrapper:
-        a: int
-        b: str
-        c: list[str]
+        @dataclass
+        class DataWrapper:
+            a: int
+            b: str
+            c: list[str]
 
-        d: SubData
-        e: Optional[SubData]
+            d: SubData
+            e: Optional[SubData]
 
-    obj = DataWrapper(42, "teste", ["a", "b", "c"], SubData(1, 2), None)
-    data = pack(obj)
+        obj = DataWrapper(42, "teste", ["a", "b", "c"], SubData(1, 2), None)
+        data = pack(obj)
 
-    unpacked_obj = unpack(DataWrapper, data)
+        unpacked_obj = unpack(DataWrapper, data)
 
-    assert unpacked_obj.a == obj.a
-    assert unpacked_obj.b == obj.b
-    assert unpacked_obj.c == obj.c
-    assert unpacked_obj.d == obj.d
-    assert unpacked_obj.e == obj.e
+        assert unpacked_obj.a == obj.a
+        assert unpacked_obj.b == obj.b
+        assert unpacked_obj.c == obj.c
+        assert unpacked_obj.d == obj.d
+        assert unpacked_obj.e == obj.e
 
+    def test_pack_unpack_on_native_types(self) -> None:
+        ORIGINAL_DATA = 42
 
-def test_pack_unpack_on_native_types() -> None:
-    ORIGINAL_DATA = 42
+        data = pack(ORIGINAL_DATA)
+        unpacked_data = unpack(int, data)
 
-    data = pack(ORIGINAL_DATA)
-    unpacked_data = unpack(int, data)
+        assert unpacked_data == ORIGINAL_DATA
 
-    assert unpacked_data == ORIGINAL_DATA
+    def test_pack_unpack_with_precision(self) -> None:
+        @dataclass
+        class Data:
+            a: Annotated[int, ctypes.c_int16]
+            b: Annotated[int, ctypes.c_int32]
+
+        obj = Data(42, 100000)
+        data = pack(obj)
+        unpacked_obj = unpack(Data, data)
+
+        assert unpacked_obj.a == obj.a
+        assert unpacked_obj.b == obj.b
+
+    def test_pack_has_lower_usage_with_precision(self) -> None:
+        @dataclass
+        class Data1:
+            a: Annotated[int, ctypes.c_int16]
+            b: Annotated[float, ctypes.c_float]
+
+        @dataclass
+        class Data2:
+            a: int
+            b: float
+
+        obj1 = Data1(42, 3.14)
+        obj2 = Data2(42, 3.14)
+
+        data1 = pack(obj1)
+        data2 = pack(obj2)
+        data_pickled = pickle.dumps(data1)
+
+        assert sys.getsizeof(data1) < sys.getsizeof(data2)
+        assert sys.getsizeof(data1) < sys.getsizeof(data_pickled)
+        assert sys.getsizeof(data2) < sys.getsizeof(data_pickled)
+
+    def test_pack_unpack_with_broken_api(self) -> None:
+        @dataclass
+        class Data1:
+            a: int
+            b: float
+
+        @dataclass
+        class Data2:
+            b: float
+            a: int
+
+        obj = Data1(42, 3.14)
+        data = pack(obj)
+
+        with pytest.raises(ValueError):
+            _ = unpack(Data2, data)
