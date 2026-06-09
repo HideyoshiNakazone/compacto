@@ -8,8 +8,8 @@ from typing_extensions import Any, Optional, Tuple
 import struct
 
 
-class OptionalEncoder(TypeEncoder[Optional]):
-    mapped_type = Optional
+class OptionalEncoder(TypeEncoder):
+    mapped_type = InternalTypes.OPTIONAL
 
     @staticmethod
     def encode(node: TreeNode[StructTyping], value: Optional[Any]) -> bytes:

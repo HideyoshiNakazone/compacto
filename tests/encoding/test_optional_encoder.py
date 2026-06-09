@@ -1,5 +1,11 @@
 from compacto.encoding.optional_encoder import OptionalEncoder
-from compacto.struct_parser import FieldsDeff, OptionalDeff, StructTyping, struct_parser
+from compacto.struct_parser import (
+    FieldsDeff,
+    OptionalDeff,
+    StringDeff,
+    StructTyping,
+    struct_parser,
+)
 from compacto.utils.constants import InternalTypes
 from compacto.utils.tree_node import TreeNode
 
@@ -29,17 +35,17 @@ class TestOptionalEncoder:
     @pytest.fixture
     def optional_int_node(self) -> TreeNode[StructTyping]:
         return (
-            OptionalDeff(name="test")
+            OptionalDeff(field_name="test")
             .to_tree_node()
-            .add_child(FieldsDeff("_element", int).to_tree_node())
+            .add_child(FieldsDeff("_element", InternalTypes.INT.value).to_tree_node())
         )
 
     @pytest.fixture
     def optional_str_node(self) -> TreeNode[StructTyping]:
         return (
-            OptionalDeff(name="test")
+            OptionalDeff(field_name="test")
             .to_tree_node()
-            .add_child(FieldsDeff("_element", str).to_tree_node())
+            .add_child(StringDeff("_element").to_tree_node())
         )
 
     @pytest.fixture

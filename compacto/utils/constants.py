@@ -1,9 +1,23 @@
-from typing_extensions import Generic, Protocol, Self, Type, TypeVar, runtime_checkable
+from typing_extensions import (
+    Generic,
+    Iterable,
+    Optional,
+    Protocol,
+    Self,
+    Type,
+    TypeVar,
+    Union,
+    runtime_checkable,
+)
 
 import ctypes
 from dataclasses import dataclass
 from enum import Enum
-from typing import Optional
+
+
+def is_optional(type_origin: type, type_args: Iterable[type]) -> bool:
+    """Check if a type is Optional[X] (i.e. Union[X, None])"""
+    return type_origin is Union and type(None) in type_args
 
 
 @runtime_checkable
@@ -22,10 +36,10 @@ class Ctype(InternalType):
     def get_python_type(self) -> type:
         return type(self.ctype().value)
 
-    def get_byte_size(self) -> int | None:
+    def get_byte_size(self) -> int:
         return ctypes.sizeof(self.ctype)
 
-    def get_struct_token(self) -> str | None:
+    def get_struct_token(self) -> str:
         return self.ctype._type_
 
     def is_root_type(self) -> bool:
@@ -71,11 +85,14 @@ class InternalTypes(Enum):
     FLOAT = Ctype(ctypes.c_float)
     DOUBLE = Ctype(ctypes.c_double, True)
 
+    # Wildcard for Any Ctype
+    ANY_CTYPE = Ctype(ctypes._SimpleCData)
+
     # Custom Types
     BYTES = CustomType(bytes)
     STRING = CustomType(str)
     LIST = CustomType(list)
-    OPTIONAL = CustomType(Optional)
+    OPTIONAL = CustomType(...)
     OBJECT = CustomType(object)
 
     def get_python_type(self) -> type:
@@ -89,15 +106,21 @@ class InternalTypes(Enum):
 
     @classmethod
     def get_from_type(
-        cls, type_: type, ctype: Optional[Type[ctypes._SimpleCData]] = None
+        cls,
+        type_origin: type,
+        type_args: Iterable[type],
+        ctype: Optional[Type[ctypes._SimpleCData]] = None,
     ) -> Self:
+        if is_optional(type_origin, type_args):
+            return cls.OPTIONAL
+
         for t in cls:
             if ctype is None and not t.value.is_root_type():
                 continue
             if ctype is not None and t.value.ctype != ctype:
                 continue
 
-            if t.value.get_python_type() == type_:
+            if t.value.get_python_type() == type_origin:
                 return t
 
         return cls.OBJECT

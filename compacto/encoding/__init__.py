@@ -1,7 +1,5 @@
-from .bool_encoder import BoolEncoder
 from .bytes_encoder import ByteEncoder
-from .float_encoder import FloatEncoder
-from .int_encoder import IntEncoder
+from .field_encoder import FieldEncoder
 from .list_encoder import ListEncoder
 from .object_encoder import ObjectEncoder
 from .optional_encoder import OptionalEncoder
@@ -10,10 +8,8 @@ from .type_encoder import TypeEncoder
 
 
 __all__ = [
-    BoolEncoder,
     ByteEncoder,
-    FloatEncoder,
-    IntEncoder,
+    FieldEncoder,
     ListEncoder,
     ObjectEncoder,
     OptionalEncoder,

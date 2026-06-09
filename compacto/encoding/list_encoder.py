@@ -10,8 +10,8 @@ from typing_extensions import Tuple
 import struct
 
 
-class ListEncoder(TypeEncoder[list]):
-    mapped_type = list
+class ListEncoder(TypeEncoder):
+    mapped_type = InternalTypes.LIST
 
     @staticmethod
     def encode(node: TreeNode[StructTyping], value: list) -> bytes:

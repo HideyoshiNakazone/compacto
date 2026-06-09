@@ -1,5 +1,6 @@
 from compacto.encoding import ListEncoder
-from compacto.struct_parser import FieldsDeff, ListDeff, StructTyping
+from compacto.struct_parser import FieldsDeff, ListDeff, StringDeff, StructTyping
+from compacto.utils.constants import InternalTypes
 from compacto.utils.tree_node import TreeNode
 
 import pytest
@@ -11,7 +12,7 @@ class TestListEncoder:
         return (
             ListDeff("test_list")
             .to_tree_node()
-            .add_child(FieldsDeff("test_list", str).to_tree_node())
+            .add_child(StringDeff("test_list").to_tree_node())
         )
 
     @pytest.fixture
@@ -19,7 +20,7 @@ class TestListEncoder:
         return (
             ListDeff("test_list")
             .to_tree_node()
-            .add_child(FieldsDeff("test_list", int).to_tree_node())
+            .add_child(FieldsDeff("test_list", InternalTypes.INT.value).to_tree_node())
         )
 
     def test_encode_decode_list_string(self, string_list_deff: TreeNode[StructTyping]):

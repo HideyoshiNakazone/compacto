@@ -1,4 +1,11 @@
-from compacto.struct_parser import FieldsDeff, OptionalDeff, StructDeff, struct_parser
+from compacto.struct_parser import (
+    FieldsDeff,
+    ListDeff,
+    ObjectDeff,
+    OptionalDeff,
+    StringDeff,
+    struct_parser,
+)
 
 import pytest
 from typing_extensions import Optional
@@ -27,11 +34,13 @@ def test_struct_parser_valid_annotations() -> None:
         a: str
         b: int
         c: Optional[int]
+        d: list[int]
 
     typing_tree = struct_parser(ValidAnnotations)
 
-    assert isinstance(typing_tree.data, StructDeff)
+    assert isinstance(typing_tree.data, ObjectDeff)
 
-    assert isinstance(typing_tree.children[0].data, FieldsDeff)
+    assert isinstance(typing_tree.children[0].data, StringDeff)
     assert isinstance(typing_tree.children[1].data, FieldsDeff)
     assert isinstance(typing_tree.children[2].data, OptionalDeff)
+    assert isinstance(typing_tree.children[3].data, ListDeff)

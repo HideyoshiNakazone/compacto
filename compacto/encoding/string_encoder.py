@@ -10,8 +10,8 @@ from typing_extensions import Tuple
 import struct
 
 
-class StringEncoder(TypeEncoder[str]):
-    mapped_type = str
+class StringEncoder(TypeEncoder):
+    mapped_type = InternalTypes.STRING
 
     @staticmethod
     def encode(node: TreeNode[StructTyping], value: str) -> bytes:
