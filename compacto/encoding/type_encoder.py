@@ -1,4 +1,4 @@
-from compacto.struct_parser import StructTyping, struct_parser
+from compacto.struct_parser import StructTyping
 from compacto.utils.constants import InternalTypes
 from compacto.utils.tree_node import TreeNode
 
@@ -59,22 +59,19 @@ class TypeEncoder(Protocol):
         return cls.__encoders__.get(InternalTypes.OBJECT, None)
 
     @classmethod
-    def pack(cls, obj: T) -> bytes:
-        clzz = type(obj)
-        typing_tree = struct_parser(clzz)
-
+    def pack(cls, typing_tree: TreeNode[StructTyping], obj: T) -> bytes:
         encoder = cls.get_implementation(typing_tree.data.field_type)
         if encoder is None:
-            raise TypeError(f"Unsupported field type: {clzz.__name__}")
+            raise TypeError(f"Unsupported field type: {type(obj).__name__}")
 
         return encoder.encode(typing_tree, obj)
 
     @classmethod
-    def unpack(cls, clzz: type[T], data: bytes) -> Tuple[T, int]:
-        typing_tree = struct_parser(clzz)
-
+    def unpack(cls, typing_tree: TreeNode[StructTyping], data: bytes) -> Tuple[T, int]:
         encoder = cls.get_implementation(typing_tree.data.field_type)
         if encoder is None:
-            raise TypeError(f"Unsupported field type: {clzz.__name__}")
+            raise TypeError(
+                f"Unsupported field type: {typing_tree.data.field_type.__name__}"
+            )
 
         return encoder.decode(typing_tree, data)

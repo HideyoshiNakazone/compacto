@@ -17,13 +17,8 @@ class ObjectEncoder(TypeEncoder):
     def encode(node: TreeNode[StructTyping], value: object) -> bytes:
         data = bytearray()
         for child_node in node:
-            node_data = child_node.data
-            encoder = TypeEncoder.get_implementation(node_data.field_type)
-            if encoder is None:
-                raise TypeError(f"Unsupported field type: {node_data.field_type}")
-
             data.extend(
-                encoder.encode(child_node, getattr(value, node_data.field_name))
+                TypeEncoder.pack(child_node, getattr(value, child_node.data.field_name))
             )
 
         return data
@@ -36,13 +31,8 @@ class ObjectEncoder(TypeEncoder):
         offset = 0
 
         for child_node in typing_tree:
-            node_data = child_node.data
-            encoder = TypeEncoder.get_implementation(node_data.field_type)
-            if encoder is None:
-                raise TypeError(f"Unsupported field type: {node_data.field_type}")
-
-            value, var_offset = encoder.decode(child_node, data[offset:])
+            value, var_offset = TypeEncoder.unpack(child_node, data[offset:])
             offset += var_offset
-            fields[node_data.field_name] = value
+            fields[child_node.data.field_name] = value
 
         return node.data.field_clzz(**fields), offset
