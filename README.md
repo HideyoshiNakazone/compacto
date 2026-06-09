@@ -66,6 +66,49 @@ assert result.y == p.y
 
 ---
 
+## Precision Control via ctypes Annotations
+
+By default, `int` is encoded as a 64-bit signed integer and `float` as a 64-bit double. You can override this per-field using `Annotated` with a `ctypes` type to control the exact binary representation:
+
+```python
+from dataclasses import dataclass
+from typing_extensions import Annotated
+import ctypes
+from compacto import pack, unpack
+
+@dataclass
+class Measurement:
+    small: Annotated[int, ctypes.c_int16]   # 2 bytes
+    medium: Annotated[int, ctypes.c_int32]  # 4 bytes
+    precise: Annotated[float, ctypes.c_float]  # 4 bytes (single precision)
+
+obj = Measurement(42, 100000, 3.14)
+data = pack(obj)
+result = unpack(Measurement, data)
+```
+
+### Permitted ctypes
+
+| ctypes type        | Python type | Size    |
+|--------------------|-------------|---------|
+| `ctypes.c_bool`    | `bool`      | 1 byte  |
+| `ctypes.c_int8`    | `int`       | 1 byte  |
+| `ctypes.c_int16`   | `int`       | 2 bytes |
+| `ctypes.c_int32`   | `int`       | 4 bytes |
+| `ctypes.c_int64`   | `int`       | 8 bytes |
+| `ctypes.c_uint8`   | `int`       | 1 byte  |
+| `ctypes.c_uint16`  | `int`       | 2 bytes |
+| `ctypes.c_uint32`  | `int`       | 4 bytes |
+| `ctypes.c_uint64`  | `int`       | 8 bytes |
+| `ctypes.c_uint`    | `int`       | 4 bytes |
+| `ctypes.c_int`     | `int`       | 4 bytes |
+| `ctypes.c_float`   | `float`     | 4 bytes |
+| `ctypes.c_double`  | `float`     | 8 bytes |
+
+> Using a ctypes type not in the list above will raise a `TypeError` at encode time.
+
+---
+
 ## Nested Objects
 
 compacto handles nested annotated classes out of the box:
