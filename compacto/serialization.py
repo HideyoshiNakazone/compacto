@@ -52,5 +52,11 @@ def unpack(clzz: type[T], data: bytes) -> T:
             "Schema mismatch: the binary data was encoded with a different struct layout."
         )
 
-    value, _ = TypeEncoder.unpack(typing_tree, data[header.size_of_header :])
-    return value
+    try:
+        value, _ = TypeEncoder.unpack(typing_tree, data[header.size_of_header :])
+        return value
+    except Exception as e:
+        raise ValueError(
+            "Unable to deserialize data, likely due to a mismatch between the expected number of bytes "
+            f"of the struct definition and the binary data. Details: {str(e)}"
+        )

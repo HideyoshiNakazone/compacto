@@ -191,3 +191,15 @@ class TestInspect:
             a: int
 
         assert inspect(Precise).schema_hash != inspect(Default).schema_hash
+
+    def test_pack_unpack_truncated_before_header_ending(self):
+        @dataclass
+        class Default:
+            a: int
+
+        obj = Default(42)
+
+        data = pack(obj)
+
+        with pytest.raises(ValueError):
+            _ = unpack(Default, data[:3])
