@@ -1,5 +1,6 @@
 from compacto import PROTOCOL_VERSION, inspect, pack, unpack
 from compacto.encoding_headers import EncodingHeader
+from compacto.utils.exceptions import InvalidHeaderException
 
 import pytest
 from typing_extensions import Annotated, Optional
@@ -94,7 +95,7 @@ class TestSerialization:
         obj = Data1(42, 3.14)
         data = pack(obj)
 
-        with pytest.raises(ValueError):
+        with pytest.raises(InvalidHeaderException):
             _ = unpack(Data2, data)
 
 
@@ -201,5 +202,5 @@ class TestInspect:
 
         data = pack(obj)
 
-        with pytest.raises(ValueError):
+        with pytest.raises(InvalidHeaderException):
             _ = unpack(Default, data[:3])

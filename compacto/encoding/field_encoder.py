@@ -14,10 +14,10 @@ class FieldEncoder(TypeEncoder):
     mapped_type = InternalTypes.ANY_CTYPE
 
     @staticmethod
-    def encode(node: TreeNode[FieldsDeff], value: Any) -> bytes:
+    def _encode(node: TreeNode[FieldsDeff], value: Any) -> bytes:
         return struct.pack(node.data.field_impl.get_struct_token(), value)
 
     @staticmethod
-    def decode(node: TreeNode[FieldsDeff], data: bytes) -> Tuple[float, int]:
+    def _decode(node: TreeNode[FieldsDeff], data: bytes) -> Tuple[float, int]:
         (value,) = struct.unpack_from(node.data.field_impl.get_struct_token(), data)
         return value, node.data.field_impl.get_byte_size()

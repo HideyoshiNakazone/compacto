@@ -4,6 +4,7 @@ from compacto.encoding import (
 from compacto.encoding_headers import EncodingHeader
 from compacto.struct_parser import struct_parser
 from compacto.utils.annotations import HasAnnotations
+from compacto.utils.exceptions import InvalidHeaderException
 
 from typing_extensions import TypeVar
 
@@ -43,20 +44,14 @@ def unpack(clzz: type[T], data: bytes) -> T:
     expected = EncodingHeader.from_params(PROTOCOL_VERSION, typing_tree)
 
     if header.version != expected.version:
-        raise ValueError(
+        raise InvalidHeaderException(
             f"Protocol version mismatch: expected {expected.version}, got {header.version}"
         )
 
     if header.schema_hash != expected.schema_hash:
-        raise ValueError(
+        raise InvalidHeaderException(
             "Schema mismatch: the binary data was encoded with a different struct layout."
         )
 
-    try:
-        value, _ = TypeEncoder.unpack(typing_tree, data[header.size_of_header :])
-        return value
-    except Exception as e:
-        raise ValueError(
-            "Unable to deserialize data, likely due to a mismatch between the expected number of bytes "
-            f"of the struct definition and the binary data. Details: {str(e)}"
-        )
+    value, _ = TypeEncoder.unpack(typing_tree, data[header.size_of_header :])
+    return value
