@@ -1,5 +1,6 @@
 from compacto.utils.annotations import HasAnnotations
 from compacto.utils.constants import Ctype, InternalType, InternalTypes
+from compacto.utils.exceptions import TypeParsingException
 from compacto.utils.tree_node import TreeNode
 
 from typing_extensions import (
@@ -85,7 +86,7 @@ def _unwrap_annotated(
         args = get_args(field_type)
 
         if not (isinstance(args[1], type) and issubclass(args[1], ctypes._SimpleCData)):
-            raise TypeError(
+            raise TypeParsingException(
                 "Only type ctypes are permited as annotations, a instance is not accepted, "
                 "e.g. Annotated[int, ctypes.c_int32] is valid, but Annotated[int, ctypes.c_int32()] is not."
             )
@@ -107,7 +108,7 @@ def _get_type_metadata(field_type: type) -> TypeMetadata:
 def _get_validated_annotations(clzz: type) -> dict[str, type]:
     hints = get_type_hints(clzz, include_extras=True)
     if not hints:
-        raise TypeError(f"{clzz.__name__} has no annotated fields.")
+        raise TypeParsingException(f"{clzz.__name__} has no annotated fields.")
 
     # Detect bare class attributes that aren't annotated
     unannotated = {
@@ -120,7 +121,7 @@ def _get_validated_annotations(clzz: type) -> dict[str, type]:
         and k != "model_config"  # added for pydantic compatibility
     }
     if unannotated:
-        raise TypeError(
+        raise TypeParsingException(
             f"{clzz.__name__} has unannotated class attributes: {unannotated}. "
             "All fields must be annotated."
         )
@@ -144,7 +145,9 @@ def _parse_type(field_name: str, field_type: type) -> TreeNode[StructTyping]:
 
         case InternalTypes.LIST:
             if not type_metadata.args:
-                raise TypeError("list fields must have a type argument, e.g. list[int]")
+                raise TypeParsingException(
+                    "list fields must have a type argument, e.g. list[int]"
+                )
             return (
                 ListDeff(field_name=field_name)
                 .to_tree_node()
@@ -153,12 +156,12 @@ def _parse_type(field_name: str, field_type: type) -> TreeNode[StructTyping]:
 
         case InternalTypes.OPTIONAL:
             if not type_metadata.args:
-                raise TypeError(
+                raise TypeParsingException(
                     "optional fields must have a type argument, e.g. Optional[int] or int | None"
                 )
             inner_args = [a for a in type_metadata.args if a is not type(None)]
             if len(inner_args) != 1:
-                raise TypeError(
+                raise TypeParsingException(
                     "optional fields must wrap exactly one type, e.g. Optional[int]"
                 )
             return (
@@ -191,7 +194,9 @@ def _parse_type(field_name: str, field_type: type) -> TreeNode[StructTyping]:
             ).to_tree_node()
 
         case _:
-            raise TypeError(f"No parser defined for internal type: {internal_type}")
+            raise TypeParsingException(
+                f"No parser defined for internal type: {internal_type}"
+            )
 
 
 def struct_parser(obj_or_clzz: T | type[T]) -> TreeNode[StructTyping]:
