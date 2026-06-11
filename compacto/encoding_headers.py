@@ -1,4 +1,5 @@
 from compacto.struct_parser import FieldsDeff, StructTyping
+from compacto.utils.exceptions import InvalidHeaderException
 from compacto.utils.tree_node import TreeNode
 
 from typing_extensions import Self
@@ -43,10 +44,16 @@ class EncodingHeader:
 
     @classmethod
     def decode(cls, data: bytes) -> Self:
+        if len(data) <= ENCODING_HASH_SIZE:
+            raise InvalidHeaderException(
+                "Invalid encoding header. The data passed didn't have the correct size."
+            )
+
         version = struct.unpack(VERSION_ENCODING_TOKEN, data[:SIZE_OF_VERSION_BYTES])[0]
         type_hash = data[
             SIZE_OF_VERSION_BYTES : SIZE_OF_VERSION_BYTES + ENCODING_HASH_SIZE
         ]
+
         return cls(version, type_hash)
 
     @classmethod

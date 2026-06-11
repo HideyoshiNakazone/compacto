@@ -12,7 +12,7 @@ class OptionalEncoder(TypeEncoder):
     mapped_type = InternalTypes.OPTIONAL
 
     @staticmethod
-    def encode(node: TreeNode[StructTyping], value: Optional[Any]) -> bytes:
+    def _encode(node: TreeNode[StructTyping], value: Optional[Any]) -> bytes:
         if not isinstance(node.data, OptionalDeff):
             raise TypeError(f"Unsupported field type: {type(node.data)}")
 
@@ -38,7 +38,7 @@ class OptionalEncoder(TypeEncoder):
         return data
 
     @staticmethod
-    def decode(node: TreeNode[StructTyping], data: bytes) -> Tuple[Optional[Any], int]:
+    def _decode(node: TreeNode[StructTyping], data: bytes) -> Tuple[Optional[Any], int]:
         if not isinstance(node.data, OptionalDeff):
             raise TypeError(f"Unsupported field type: {type(node.data)}")
 

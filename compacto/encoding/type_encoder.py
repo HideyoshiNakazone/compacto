@@ -1,5 +1,10 @@
 from compacto.struct_parser import StructTyping
-from compacto.utils.constants import InternalTypes
+from compacto.utils.constants import InternalType, InternalTypes
+from compacto.utils.exceptions import (
+    AssertionException,
+    DecodingException,
+    TypeParsingException,
+)
 from compacto.utils.tree_node import TreeNode
 
 from typing_extensions import (
@@ -21,8 +26,28 @@ class TypeEncoder(Protocol):
 
     __encoders__: dict[InternalTypes, Self] = {}
 
+    @classmethod
+    def encode(cls, node: TreeNode[StructTyping], value: T) -> bytes:
+        try:
+            return cls._encode(node, value)
+        except Exception as err:
+            raise DecodingException(
+                "Unable to serialize data, likely due to a mismatch between type hinted and the value passed. "
+                f"Details: {str(err)}"
+            ) from err
+
+    @classmethod
+    def decode(cls, node: TreeNode[StructTyping], data: bytes) -> T:
+        try:
+            return cls._decode(node, data)
+        except Exception as err:
+            raise DecodingException(
+                "Unable to deserialize data, likely due to a mismatch between the expected number of bytes "
+                f"of the struct definition and the binary data. Details: {str(err)}"
+            ) from err
+
     @staticmethod
-    def encode(node: TreeNode[StructTyping], value: T) -> bytes:
+    def _encode(node: TreeNode[StructTyping], value: T) -> bytes:
         """
         Encode a value to bytes.
         :param node: definition of the type to encode
@@ -32,7 +57,7 @@ class TypeEncoder(Protocol):
         ...
 
     @staticmethod
-    def decode(node: TreeNode[StructTyping], data: bytes) -> Tuple[T, int]:
+    def _decode(node: TreeNode[StructTyping], data: bytes) -> Tuple[T, int]:
         """
         Decoder implementation per type
         :param node: definition of the type to decode
@@ -46,8 +71,10 @@ class TypeEncoder(Protocol):
         if (mapped_type := getattr(cls, "mapped_type", None)) is None:
             raise TypeError(f"{cls.__name__} must have a 'mapped_type' attribute")
 
-        # if not isinstance(mapped_type, InternalType):
-        #     raise TypeError(f"{cls.__name__} must have a 'mapped_type' attribute")
+        if mapped_type is None or not isinstance(mapped_type.value, InternalType):
+            raise AssertionException(
+                f"{cls.__name__} must have a 'mapped_type' attribute. This is a Library error, please open an issue :)"
+            )
 
         cls.__encoders__[mapped_type] = cls
 
@@ -62,7 +89,7 @@ class TypeEncoder(Protocol):
     def pack(cls, typing_tree: TreeNode[StructTyping], obj: T) -> bytes:
         encoder = cls.get_implementation(typing_tree.data.field_type)
         if encoder is None:
-            raise TypeError(f"Unsupported field type: {type(obj).__name__}")
+            raise TypeParsingException(f"Unsupported field type: {type(obj).__name__}")
 
         return encoder.encode(typing_tree, obj)
 
@@ -70,7 +97,7 @@ class TypeEncoder(Protocol):
     def unpack(cls, typing_tree: TreeNode[StructTyping], data: bytes) -> Tuple[T, int]:
         encoder = cls.get_implementation(typing_tree.data.field_type)
         if encoder is None:
-            raise TypeError(
+            raise TypeParsingException(
                 f"Unsupported field type: {typing_tree.data.field_type.__name__}"
             )
 

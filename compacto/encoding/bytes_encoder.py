@@ -14,14 +14,14 @@ class ByteEncoder(TypeEncoder):
     mapped_type = InternalTypes.BYTES
 
     @staticmethod
-    def encode(node: TreeNode[StructTyping], value: bytes) -> bytes:
+    def _encode(node: TreeNode[StructTyping], value: bytes) -> bytes:
         buf = bytearray(InternalTypes.UINT64.get_byte_size() + len(value))
         struct.pack_into(InternalTypes.UINT64.get_struct_token(), buf, 0, len(value))
         buf[InternalTypes.UINT64.get_byte_size() :] = value
         return bytes(buf)
 
     @staticmethod
-    def decode(_: TreeNode[StructTyping], data: bytes) -> Tuple[bytes, int]:
+    def _decode(_: TreeNode[StructTyping], data: bytes) -> Tuple[bytes, int]:
         data = memoryview(data)
         (length,) = struct.unpack_from(InternalTypes.UINT64.get_struct_token(), data)
         data = data[InternalTypes.UINT64.get_byte_size() :]

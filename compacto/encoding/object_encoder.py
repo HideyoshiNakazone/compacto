@@ -14,7 +14,7 @@ class ObjectEncoder(TypeEncoder):
     mapped_type = InternalTypes.OBJECT
 
     @staticmethod
-    def encode(node: TreeNode[StructTyping], value: object) -> bytes:
+    def _encode(node: TreeNode[StructTyping], value: object) -> bytes:
         data = bytearray()
         for child_node in node:
             data.extend(
@@ -24,7 +24,7 @@ class ObjectEncoder(TypeEncoder):
         return data
 
     @staticmethod
-    def decode(node: TreeNode[ObjectDeff], data: bytes) -> Tuple[object, int]:
+    def _decode(node: TreeNode[ObjectDeff], data: bytes) -> Tuple[object, int]:
         typing_tree = struct_parser(node.data.field_clzz)
 
         fields: dict[str, object] = {}

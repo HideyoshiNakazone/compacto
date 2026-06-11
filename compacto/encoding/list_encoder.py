@@ -14,7 +14,7 @@ class ListEncoder(TypeEncoder):
     mapped_type = InternalTypes.LIST
 
     @staticmethod
-    def encode(node: TreeNode[StructTyping], value: list) -> bytes:
+    def _encode(node: TreeNode[StructTyping], value: list) -> bytes:
         if not isinstance(node.data, ListDeff):
             raise TypeError(f"Unsupported field type: {type(node.data)}")
 
@@ -39,7 +39,7 @@ class ListEncoder(TypeEncoder):
         )
 
     @staticmethod
-    def decode(node: TreeNode[StructTyping], data: bytes) -> Tuple[list, int]:
+    def _decode(node: TreeNode[StructTyping], data: bytes) -> Tuple[list, int]:
         if not isinstance(node.data, ListDeff):
             raise TypeError(f"Unsupported field type: {type(node.data)}")
 
