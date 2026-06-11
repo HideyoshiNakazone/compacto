@@ -4,7 +4,7 @@ from compacto.utils.exceptions import InvalidHeaderException
 
 import pytest
 from pydantic import Field
-from typing_extensions import Annotated, Optional
+from typing_extensions import Annotated, NamedTuple, Optional
 
 import ctypes
 import sys
@@ -243,6 +243,19 @@ class TestInspect:
         obj = Data(a=42, b=3.14)
 
         data = pack(obj)
+        unpacked_obj = unpack(Data, data)
+
+        assert obj.a == unpacked_obj.a
+        assert obj.b == unpacked_obj.b
+
+    def test_pack_unpack_with_namedtuples(self):
+        class Data(NamedTuple):
+            a: int
+            b: float
+
+        obj = Data(a=42, b=3.14)
+        data = pack(obj)
+
         unpacked_obj = unpack(Data, data)
 
         assert obj.a == unpacked_obj.a
