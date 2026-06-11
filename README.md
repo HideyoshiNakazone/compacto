@@ -216,7 +216,7 @@ obj = unpack(MyClass, data)
 |-------------------------------|----------|
 | compacto (ctypes annotations) | 12 bytes |
 | compacto (default precision)  | 18 bytes |
-| pickle                        | 27 bytes |
+| pickle                        | 60 bytes |
 
 > Note: pickle is not compacto's real competition — compacto targets fixed-schema, cross-language binary serialization where output size and type strictness matter. Think C structs over the wire, not Python object persistence.
 
@@ -245,7 +245,7 @@ obj2 = Data2(42, 3.14)
 
 data1 = pack(obj1)
 data2 = pack(obj2)
-data_pickled = pickle.dumps(data1)
+data_pickled = pickle.dumps(obj1)
 
 print(f"compacto (annotated): {len(data1)} bytes")
 print(f"compacto (default):   {len(data2)} bytes")

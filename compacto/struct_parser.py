@@ -113,22 +113,16 @@ def _get_validated_annotations(clzz: type) -> dict[str, type]:
     unannotated = {
         k
         for k, v in vars(clzz).items()
-        if not k.startswith("__")
+        if not k.startswith("_")
         and not callable(v)
         and not isinstance(v, (classmethod, staticmethod, property))
         and k not in hints
+        and k != "model_config"  # added for pydantic compatibility
     }
     if unannotated:
         raise TypeError(
             f"{clzz.__name__} has unannotated class attributes: {unannotated}. "
             "All fields must be annotated."
-        )
-
-    init_params = {k for k in get_type_hints(clzz.__init__) if k != "return"}
-    missing = init_params - hints.keys()
-    if missing:
-        raise TypeError(
-            f"{clzz.__name__}.__init__ references unannotated fields: {missing}"
         )
 
     return hints

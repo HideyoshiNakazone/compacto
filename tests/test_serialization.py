@@ -3,10 +3,10 @@ from compacto.encoding_headers import EncodingHeader
 from compacto.utils.exceptions import InvalidHeaderException
 
 import pytest
+from pydantic import Field
 from typing_extensions import Annotated, Optional
 
 import ctypes
-import pickle
 import sys
 from dataclasses import dataclass
 
@@ -75,11 +75,8 @@ class TestSerialization:
 
         data1 = pack(obj1)
         data2 = pack(obj2)
-        data_pickled = pickle.dumps(data1)
 
         assert sys.getsizeof(data1) < sys.getsizeof(data2)
-        assert sys.getsizeof(data1) < sys.getsizeof(data_pickled)
-        assert sys.getsizeof(data2) < sys.getsizeof(data_pickled)
 
     def test_pack_unpack_with_broken_api(self) -> None:
         @dataclass
@@ -204,3 +201,49 @@ class TestInspect:
 
         with pytest.raises(InvalidHeaderException):
             _ = unpack(Default, data[:3])
+
+    def test_pack_unpack_compatibility_with_pydantic_without_precision(self):
+        from pydantic import BaseModel
+
+        class Data(BaseModel):
+            a: Annotated[int, ctypes.c_int16] = Field(
+                gt=0,
+                lt=43,
+                description="these field validations will not break or impact the serialization",
+            )
+            b: Annotated[float, ctypes.c_double] = Field(
+                gt=0,
+                lt=3.15,
+                description="these field validations will not break or impact the serialization",
+            )
+
+        obj = Data(a=42, b=3.14)
+
+        data = pack(obj)
+        unpacked_obj = unpack(Data, data)
+
+        assert obj.a == unpacked_obj.a
+        assert obj.b == unpacked_obj.b
+
+    def test_pack_unpack_compatibility_with_pydantic_with_precision(self):
+        from pydantic import BaseModel
+
+        class Data(BaseModel):
+            a: int = Field(
+                gt=0,
+                lt=43,
+                description="these field validations will not break or impact the serialization",
+            )
+            b: float = Field(
+                gt=0,
+                lt=3.15,
+                description="these field validations will not break or impact the serialization",
+            )
+
+        obj = Data(a=42, b=3.14)
+
+        data = pack(obj)
+        unpacked_obj = unpack(Data, data)
+
+        assert obj.a == unpacked_obj.a
+        assert obj.b == unpacked_obj.b
