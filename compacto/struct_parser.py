@@ -4,6 +4,7 @@ from compacto.utils.tree_node import TreeNode
 
 from typing_extensions import (
     Annotated,
+    Type,
     TypeVar,
     Union,
     get_args,
@@ -13,7 +14,6 @@ from typing_extensions import (
 
 import ctypes
 from dataclasses import dataclass
-from typing import Type
 
 
 T = TypeVar("T", bound=HasAnnotations)
