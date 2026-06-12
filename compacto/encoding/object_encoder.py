@@ -1,4 +1,5 @@
 from compacto.encoding.type_encoder import TypeEncoder
+from compacto.encoding_headers import OptionFlags
 from compacto.struct_parser import (
     ObjectDeff,
     StructTyping,
@@ -14,24 +15,30 @@ class ObjectEncoder(TypeEncoder):
     mapped_type = InternalTypes.OBJECT
 
     @staticmethod
-    def _encode(node: TreeNode[StructTyping], value: object) -> bytes:
+    def _encode(
+        node: TreeNode[StructTyping], value: object, options: OptionFlags
+    ) -> bytes:
         data = bytearray()
         for child_node in node:
             data.extend(
-                TypeEncoder.pack(child_node, getattr(value, child_node.data.field_name))
+                TypeEncoder.pack(
+                    child_node, getattr(value, child_node.data.field_name), options
+                )
             )
 
         return data
 
     @staticmethod
-    def _decode(node: TreeNode[ObjectDeff], data: bytes) -> Tuple[object, int]:
+    def _decode(
+        node: TreeNode[ObjectDeff], data: bytes, options: OptionFlags
+    ) -> Tuple[object, int]:
         typing_tree = struct_parser(node.data.field_clzz)
 
         fields: dict[str, object] = {}
         offset = 0
 
         for child_node in typing_tree:
-            value, var_offset = TypeEncoder.unpack(child_node, data[offset:])
+            value, var_offset = TypeEncoder.unpack(child_node, data[offset:], options)
             offset += var_offset
             fields[child_node.data.field_name] = value
 

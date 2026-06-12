@@ -2,7 +2,7 @@ from compacto.struct_parser import FieldsDeff, StructTyping
 from compacto.utils.exceptions import InvalidHeaderException
 from compacto.utils.tree_node import TreeNode
 
-from typing_extensions import Self
+from typing_extensions import NotRequired, Self, TypedDict, Unpack
 
 import ctypes
 import hashlib
@@ -14,11 +14,32 @@ from enum import IntFlag
 HEADER_ENDIAN = ">"
 
 
+class InternalOptions(TypedDict):
+    is_little_endian: NotRequired[bool]
+    is_8_byte_hash: NotRequired[bool]
+    is_compressed: NotRequired[bool]
+
+
 class OptionFlags(IntFlag):
     NONE = 0
     IS_LITTLE_ENDIAN = 1 << 1
     IS_8_BYTE_HASH = 1 << 2
     IS_COMPRESSED = 1 << 3
+
+    @classmethod
+    def from_internal_options(cls, options: InternalOptions) -> Self:
+        options_flags = cls.NONE
+
+        if options.get("is_little_endian", False):
+            options_flags |= cls.IS_LITTLE_ENDIAN
+
+        if options.get("is_8_byte_hash", False):
+            options_flags |= cls.IS_8_BYTE_HASH
+
+        if options.get("is_compressed", False):
+            options_flags |= cls.IS_COMPRESSED
+
+        return options_flags
 
 
 ENCODING_HASH_SIZE = 4
@@ -179,9 +200,10 @@ class EncodingHeader:
     def from_params(
         cls,
         version: int,
-        options: OptionFlags,
         typing_tree: TreeNode[StructTyping],
+        **kwargs: Unpack[InternalOptions],
     ) -> Self:
+        options = OptionFlags.from_internal_options(kwargs)
         hash_size = get_hash_size(options)
 
         schema_hash = calc_hash_from_tree(

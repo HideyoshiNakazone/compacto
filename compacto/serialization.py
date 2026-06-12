@@ -1,12 +1,12 @@
 from compacto.encoding import (
     TypeEncoder,
 )
-from compacto.encoding_headers import EncodingHeader
+from compacto.encoding_headers import EncodingHeader, InternalOptions
 from compacto.struct_parser import struct_parser
 from compacto.utils.annotations import HasAnnotations
 from compacto.utils.exceptions import InvalidHeaderException
 
-from typing_extensions import TypeVar
+from typing_extensions import TypeVar, Unpack
 
 
 PROTOCOL_VERSION = 1
@@ -26,10 +26,10 @@ def inspect(pos_data: type[T] | bytes) -> EncodingHeader:
     return EncodingHeader.from_params(PROTOCOL_VERSION, typing_tree)
 
 
-def pack(obj: T) -> bytes:
+def pack(obj: T, **kwargs: Unpack[InternalOptions]) -> bytes:
     typing_tree = struct_parser(type(obj))
-    header = EncodingHeader.from_params(PROTOCOL_VERSION, typing_tree)
-    encoded_data = TypeEncoder.pack(typing_tree, obj)
+    header = EncodingHeader.from_params(PROTOCOL_VERSION, typing_tree, **kwargs)
+    encoded_data = TypeEncoder.pack(typing_tree, obj, header.options)
 
     out = bytearray(header.size_of_header + len(encoded_data))
     out[: header.size_of_header] = header.encode()
@@ -53,5 +53,7 @@ def unpack(clzz: type[T], data: bytes) -> T:
             "Schema mismatch: the binary data was encoded with a different struct layout."
         )
 
-    value, _ = TypeEncoder.unpack(typing_tree, data[header.size_of_header :])
+    value, _ = TypeEncoder.unpack(
+        typing_tree, data[header.size_of_header :], header.options
+    )
     return value

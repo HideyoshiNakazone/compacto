@@ -1,4 +1,5 @@
 from compacto.encoding.type_encoder import TypeEncoder
+from compacto.encoding_headers import OptionFlags
 from compacto.struct_parser import ListDeff, StructTyping
 from compacto.utils.constants import (
     InternalTypes,
@@ -14,7 +15,9 @@ class ListEncoder(TypeEncoder):
     mapped_type = InternalTypes.LIST
 
     @staticmethod
-    def _encode(node: TreeNode[StructTyping], value: list) -> bytes:
+    def _encode(
+        node: TreeNode[StructTyping], value: list, options: OptionFlags
+    ) -> bytes:
         if not isinstance(node.data, ListDeff):
             raise TypeError(f"Unsupported field type: {type(node.data)}")
 
@@ -31,7 +34,9 @@ class ListEncoder(TypeEncoder):
 
         encoded_elements = bytearray()
         for ele_value in value:
-            encoded_elements.extend(child_encoder.encode(child_node, ele_value))
+            encoded_elements.extend(
+                child_encoder.encode(child_node, ele_value, options)
+            )
 
         return (
             struct.pack(InternalTypes.UINT64.get_struct_token(), len(value))
@@ -39,7 +44,9 @@ class ListEncoder(TypeEncoder):
         )
 
     @staticmethod
-    def _decode(node: TreeNode[StructTyping], data: bytes) -> Tuple[list, int]:
+    def _decode(
+        node: TreeNode[StructTyping], data: bytes, options: OptionFlags
+    ) -> Tuple[list, int]:
         if not isinstance(node.data, ListDeff):
             raise TypeError(f"Unsupported field type: {type(node.data)}")
 
@@ -62,7 +69,7 @@ class ListEncoder(TypeEncoder):
 
         for _ in range(arr_len):
             elem_value, elem_offset = child_encoder.decode(
-                child_node, data[offset:].tobytes()
+                child_node, data[offset:].tobytes(), options
             )
             arr_elements.append(elem_value)
             offset += elem_offset
