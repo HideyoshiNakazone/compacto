@@ -23,8 +23,8 @@ def is_optional(type_origin: type, type_args: Iterable[type]) -> bool:
 @runtime_checkable
 class InternalType(Protocol):
     def get_python_type(self) -> type: ...
-    def get_byte_size(self) -> int | None: ...
-    def get_struct_token(self) -> str | None: ...
+    def get_byte_size(self) -> int: ...
+    def get_struct_token(self) -> str: ...
     def is_root_type(self) -> bool: ...
 
 
@@ -56,11 +56,11 @@ class CustomType(InternalType, Generic[T]):
     def get_python_type(self) -> T:
         return self.type
 
-    def get_byte_size(self) -> int | None:
-        return None
+    def get_byte_size(self) -> int:
+        raise NotImplementedError
 
-    def get_struct_token(self) -> str | None:
-        return None
+    def get_struct_token(self) -> str:
+        raise NotImplementedError
 
     def is_root_type(self) -> bool:
         return True
@@ -98,10 +98,10 @@ class InternalTypes(Enum):
     def get_python_type(self) -> type:
         return self.value.get_python_type()
 
-    def get_byte_size(self) -> int | None:
+    def get_byte_size(self) -> int:
         return self.value.get_byte_size()
 
-    def get_struct_token(self) -> str | None:
+    def get_struct_token(self) -> str:
         return self.value.get_struct_token()
 
     @classmethod
