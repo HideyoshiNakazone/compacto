@@ -16,13 +16,23 @@ class FieldEncoder(TypeEncoder):
 
     @staticmethod
     def _encode(
-        node: TreeNode[FieldsDeff], value: Any, **options: Unpack[InternalOptions]
+        node: TreeNode[FieldsDeff],
+        value: Any,
+        is_little_endian: bool,
+        **options: Unpack[InternalOptions],
     ) -> bytes:
-        return struct.pack(node.data.field_impl.get_struct_token(), value)
+        return struct.pack(
+            node.data.field_impl.get_struct_token(is_little_endian), value
+        )
 
     @staticmethod
     def _decode(
-        node: TreeNode[FieldsDeff], data: bytes, **options: Unpack[InternalOptions]
+        node: TreeNode[FieldsDeff],
+        data: bytes,
+        is_little_endian: bool,
+        **options: Unpack[InternalOptions],
     ) -> Tuple[float, int]:
-        (value,) = struct.unpack_from(node.data.field_impl.get_struct_token(), data)
+        (value,) = struct.unpack_from(
+            node.data.field_impl.get_struct_token(is_little_endian), data
+        )
         return value, node.data.field_impl.get_byte_size()

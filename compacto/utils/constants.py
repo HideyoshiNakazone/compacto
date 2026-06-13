@@ -24,7 +24,7 @@ def is_optional(type_origin: type, type_args: Iterable[type]) -> bool:
 class InternalType(Protocol):
     def get_python_type(self) -> type: ...
     def get_byte_size(self) -> int: ...
-    def get_struct_token(self) -> str: ...
+    def get_struct_token(self, is_little_endian: Optional[bool] = None) -> str: ...
     def is_root_type(self) -> bool: ...
 
 
@@ -39,8 +39,11 @@ class Ctype(InternalType):
     def get_byte_size(self) -> int:
         return ctypes.sizeof(self.ctype)
 
-    def get_struct_token(self) -> str:
-        return self.ctype._type_
+    def get_struct_token(self, is_little_endian: Optional[bool] = None) -> str:
+        if is_little_endian is None:
+            return self.ctype._type_
+        endian_token = "<" if is_little_endian else ">"
+        return f"{endian_token}{self.ctype._type_}"
 
     def is_root_type(self) -> bool:
         return self.root
@@ -59,7 +62,7 @@ class CustomType(InternalType, Generic[T]):
     def get_byte_size(self) -> int:
         raise NotImplementedError
 
-    def get_struct_token(self) -> str:
+    def get_struct_token(self, is_little_endian: Optional[bool] = None) -> str:
         raise NotImplementedError
 
     def is_root_type(self) -> bool:
@@ -101,8 +104,8 @@ class InternalTypes(Enum):
     def get_byte_size(self) -> int:
         return self.value.get_byte_size()
 
-    def get_struct_token(self) -> str:
-        return self.value.get_struct_token()
+    def get_struct_token(self, is_little_endian: Optional[bool] = None) -> str:
+        return self.value.get_struct_token(is_little_endian)
 
     @classmethod
     def get_from_type(

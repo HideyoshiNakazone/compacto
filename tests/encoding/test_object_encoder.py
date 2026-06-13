@@ -1,4 +1,5 @@
 from compacto.encoding import ObjectEncoder
+from compacto.encoding_headers import InternalOptions
 from compacto.struct_parser import StructTyping, struct_parser
 from compacto.utils.tree_node import TreeNode
 
@@ -22,14 +23,17 @@ class TestListEncoder:
         return struct_parser(clzz_test)
 
     def test_encode_decode_list_string(
-        self, obj_deff: TreeNode[StructTyping], clzz_test: type
+        self,
+        obj_deff: TreeNode[StructTyping],
+        clzz_test: type,
+        options: InternalOptions,
     ) -> None:
         test_obj = clzz_test(
             a=42,
             b="hello",
         )
 
-        data = ObjectEncoder._encode(obj_deff, test_obj)
-        decoded_obj, _ = ObjectEncoder._decode(obj_deff, data)
+        data = ObjectEncoder._encode(obj_deff, test_obj, **options)
+        decoded_obj, _ = ObjectEncoder._decode(obj_deff, data, **options)
 
         assert test_obj == decoded_obj
