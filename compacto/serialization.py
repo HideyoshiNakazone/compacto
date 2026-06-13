@@ -29,7 +29,9 @@ def inspect(pos_data: type[T] | bytes) -> EncodingHeader:
 def pack(obj: T, **kwargs: Unpack[InternalOptions]) -> bytes:
     typing_tree = struct_parser(type(obj))
     header = EncodingHeader.from_params(PROTOCOL_VERSION, typing_tree, **kwargs)
-    encoded_data = TypeEncoder.pack(typing_tree, obj, header.options)
+    encoded_data = TypeEncoder.pack(
+        typing_tree, obj, **header.options.to_internal_options()
+    )
 
     out = bytearray(header.size_of_header + len(encoded_data))
     out[: header.size_of_header] = header.encode()
@@ -54,6 +56,8 @@ def unpack(clzz: type[T], data: bytes) -> T:
         )
 
     value, _ = TypeEncoder.unpack(
-        typing_tree, data[header.size_of_header :], header.options
+        typing_tree,
+        data[header.size_of_header :],
+        **header.options.to_internal_options(),
     )
     return value

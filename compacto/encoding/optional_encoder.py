@@ -1,10 +1,10 @@
 from compacto.encoding.type_encoder import TypeEncoder
-from compacto.encoding_headers import OptionFlags
+from compacto.encoding_headers import InternalOptions
 from compacto.struct_parser import OptionalDeff, StructTyping
 from compacto.utils.constants import InternalTypes
 from compacto.utils.tree_node import TreeNode
 
-from typing_extensions import Any, Optional, Tuple
+from typing_extensions import Any, Optional, Tuple, Unpack
 
 import struct
 
@@ -14,7 +14,9 @@ class OptionalEncoder(TypeEncoder):
 
     @staticmethod
     def _encode(
-        node: TreeNode[StructTyping], value: Optional[Any], options: OptionFlags
+        node: TreeNode[StructTyping],
+        value: Optional[Any],
+        **options: Unpack[InternalOptions],
     ) -> bytes:
         if not isinstance(node.data, OptionalDeff):
             raise TypeError(f"Unsupported field type: {type(node.data)}")
@@ -36,13 +38,13 @@ class OptionalEncoder(TypeEncoder):
         data = bytearray()
 
         data.extend(struct.pack(InternalTypes.BOOL.get_struct_token(), True))
-        data.extend(child_encoder.encode(child_node, value, options))
+        data.extend(child_encoder.encode(child_node, value, **options))
 
         return data
 
     @staticmethod
     def _decode(
-        node: TreeNode[StructTyping], data: bytes, options: OptionFlags
+        node: TreeNode[StructTyping], data: bytes, **options: Unpack[InternalOptions]
     ) -> Tuple[Optional[Any], int]:
         if not isinstance(node.data, OptionalDeff):
             raise TypeError(f"Unsupported field type: {type(node.data)}")
@@ -66,5 +68,5 @@ class OptionalEncoder(TypeEncoder):
         if not non_null_flag:
             return None, offset
 
-        value, var_offset = child_encoder.decode(child_node, data[offset:], options)
+        value, var_offset = child_encoder.decode(child_node, data[offset:], **options)
         return value, offset + var_offset

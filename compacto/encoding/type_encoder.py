@@ -1,4 +1,4 @@
-from compacto.encoding_headers import OptionFlags
+from compacto.encoding_headers import InternalOptions
 from compacto.struct_parser import StructTyping
 from compacto.utils.constants import InternalType, InternalTypes
 from compacto.utils.exceptions import (
@@ -14,6 +14,7 @@ from typing_extensions import (
     Self,
     Tuple,
     TypeVar,
+    Unpack,
     runtime_checkable,
 )
 
@@ -29,10 +30,10 @@ class TypeEncoder(Protocol):
 
     @classmethod
     def encode(
-        cls, node: TreeNode[StructTyping], value: T, options: OptionFlags
+        cls, node: TreeNode[StructTyping], value: T, **options: Unpack[InternalOptions]
     ) -> bytes:
         try:
-            return cls._encode(node, value, options)
+            return cls._encode(node, value, **options)
         except Exception as err:
             raise DecodingException(
                 "Unable to serialize data, likely due to a mismatch between type hinted and the value passed. "
@@ -41,10 +42,13 @@ class TypeEncoder(Protocol):
 
     @classmethod
     def decode(
-        cls, node: TreeNode[StructTyping], data: bytes, options: OptionFlags
+        cls,
+        node: TreeNode[StructTyping],
+        data: bytes,
+        **options: Unpack[InternalOptions],
     ) -> T:
         try:
-            return cls._decode(node, data, options)
+            return cls._decode(node, data, **options)
         except Exception as err:
             raise DecodingException(
                 "Unable to deserialize data, likely due to a mismatch between the expected number of bytes "
@@ -52,7 +56,9 @@ class TypeEncoder(Protocol):
             ) from err
 
     @staticmethod
-    def _encode(node: TreeNode[StructTyping], value: T, options: OptionFlags) -> bytes:
+    def _encode(
+        node: TreeNode[StructTyping], value: T, **options: Unpack[InternalOptions]
+    ) -> bytes:
         """
         Encode a value to bytes.
         :param node: definition of the type to encode
@@ -63,7 +69,7 @@ class TypeEncoder(Protocol):
 
     @staticmethod
     def _decode(
-        node: TreeNode[StructTyping], data: bytes, options: OptionFlags
+        node: TreeNode[StructTyping], data: bytes, **options: Unpack[InternalOptions]
     ) -> Tuple[T, int]:
         """
         Decoder implementation per type
@@ -94,17 +100,23 @@ class TypeEncoder(Protocol):
 
     @classmethod
     def pack(
-        cls, typing_tree: TreeNode[StructTyping], obj: T, options: OptionFlags
+        cls,
+        typing_tree: TreeNode[StructTyping],
+        obj: T,
+        **options: Unpack[InternalOptions],
     ) -> bytes:
         encoder = cls.get_implementation(typing_tree.data.field_type)
         if encoder is None:
             raise TypeParsingException(f"Unsupported field type: {type(obj).__name__}")
 
-        return encoder.encode(typing_tree, obj, options)
+        return encoder.encode(typing_tree, obj, **options)
 
     @classmethod
     def unpack(
-        cls, typing_tree: TreeNode[StructTyping], data: bytes, options: OptionFlags
+        cls,
+        typing_tree: TreeNode[StructTyping],
+        data: bytes,
+        **options: Unpack[InternalOptions],
     ) -> Tuple[T, int]:
         encoder = cls.get_implementation(typing_tree.data.field_type)
         if encoder is None:
@@ -112,4 +124,4 @@ class TypeEncoder(Protocol):
                 f"Unsupported field type: {typing_tree.data.field_type.__name__}"
             )
 
-        return encoder.decode(typing_tree, data, options)
+        return encoder.decode(typing_tree, data, **options)

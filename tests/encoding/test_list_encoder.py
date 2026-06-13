@@ -1,5 +1,4 @@
 from compacto.encoding import ListEncoder
-from compacto.encoding_headers import OptionFlags
 from compacto.struct_parser import FieldsDeff, ListDeff, StringDeff, StructTyping
 from compacto.utils.constants import InternalTypes
 from compacto.utils.tree_node import TreeNode
@@ -30,20 +29,16 @@ class TestListEncoder:
             "World",
         ]
 
-        data = ListEncoder._encode(string_list_deff, list_value, OptionFlags.NONE)
-        decoded_list_string, offset = ListEncoder._decode(
-            string_list_deff, data, OptionFlags.NONE
-        )
+        data = ListEncoder._encode(string_list_deff, list_value)
+        decoded_list_string, offset = ListEncoder._decode(string_list_deff, data)
 
         assert list_value == decoded_list_string
 
     def test_encode_decode_list_int(self, int_list_deff: TreeNode[StructTyping]):
         list_value = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
 
-        data = ListEncoder._encode(int_list_deff, list_value, OptionFlags.NONE)
-        decoded_list_int, offset = ListEncoder._decode(
-            int_list_deff, data, OptionFlags.NONE
-        )
+        data = ListEncoder._encode(int_list_deff, list_value)
+        decoded_list_int, offset = ListEncoder._decode(int_list_deff, data)
 
         assert list_value == decoded_list_int
 
@@ -52,9 +47,7 @@ class TestListEncoder:
     ):
         list_value = []
 
-        data = ListEncoder._encode(int_list_deff, list_value, OptionFlags.NONE)
-        decoded_list_int, offset = ListEncoder._decode(
-            int_list_deff, data, OptionFlags.NONE
-        )
+        data = ListEncoder._encode(int_list_deff, list_value)
+        decoded_list_int, offset = ListEncoder._decode(int_list_deff, data)
 
         assert list_value == decoded_list_int

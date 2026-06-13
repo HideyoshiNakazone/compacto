@@ -1,12 +1,12 @@
 from compacto.encoding.type_encoder import TypeEncoder
-from compacto.encoding_headers import OptionFlags
+from compacto.encoding_headers import InternalOptions
 from compacto.struct_parser import StructTyping
 from compacto.utils.constants import (
     InternalTypes,
 )
 from compacto.utils.tree_node import TreeNode
 
-from typing_extensions import Tuple
+from typing_extensions import Tuple, Unpack
 
 import struct
 
@@ -16,7 +16,7 @@ class StringEncoder(TypeEncoder):
 
     @staticmethod
     def _encode(
-        node: TreeNode[StructTyping], value: str, options: OptionFlags
+        node: TreeNode[StructTyping], value: str, **options: Unpack[InternalOptions]
     ) -> bytes:
         encoded = value.encode("utf-8")
         buf = bytearray(InternalTypes.UINT64.get_byte_size() + len(encoded))
@@ -26,7 +26,7 @@ class StringEncoder(TypeEncoder):
 
     @staticmethod
     def _decode(
-        _: TreeNode[StructTyping], data: bytes, options: OptionFlags
+        _: TreeNode[StructTyping], data: bytes, **options: Unpack[InternalOptions]
     ) -> Tuple[str, int]:
         data = memoryview(data)
         (length,) = struct.unpack_from(InternalTypes.UINT64.get_struct_token(), data)

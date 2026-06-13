@@ -41,6 +41,13 @@ class OptionFlags(IntFlag):
 
         return options_flags
 
+    def to_internal_options(self) -> InternalOptions:
+        return InternalOptions(
+            is_little_endian=(self.IS_LITTLE_ENDIAN in self),
+            is_8_byte_hash=(self.IS_8_BYTE_HASH in self),
+            is_compressed=(self.IS_COMPRESSED in self),
+        )
+
 
 ENCODING_HASH_SIZE = 4
 

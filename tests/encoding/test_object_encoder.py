@@ -1,5 +1,4 @@
 from compacto.encoding import ObjectEncoder
-from compacto.encoding_headers import OptionFlags
 from compacto.struct_parser import StructTyping, struct_parser
 from compacto.utils.tree_node import TreeNode
 
@@ -30,7 +29,7 @@ class TestListEncoder:
             b="hello",
         )
 
-        data = ObjectEncoder._encode(obj_deff, test_obj, OptionFlags.NONE)
-        decoded_obj, _ = ObjectEncoder._decode(obj_deff, data, OptionFlags.NONE)
+        data = ObjectEncoder._encode(obj_deff, test_obj)
+        decoded_obj, _ = ObjectEncoder._decode(obj_deff, data)
 
         assert test_obj == decoded_obj
