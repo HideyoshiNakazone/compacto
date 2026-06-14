@@ -169,3 +169,31 @@ class TestOptionalEncoder:
         value, _ = OptionalEncoder._decode(optional_obj_node, data, **default_options)
 
         assert value is None
+
+    def test_encode_raises_on_wrong_node_type(
+        self, default_options: InternalOptions
+    ) -> None:
+        wrong_node = FieldsDeff("wrong", InternalTypes.INT.value).to_tree_node()
+        with pytest.raises(TypeError):
+            OptionalEncoder._encode(wrong_node, 42, **default_options)
+
+    def test_encode_raises_when_no_children(
+        self, default_options: InternalOptions
+    ) -> None:
+        no_children = OptionalDeff("test").to_tree_node()
+        with pytest.raises(RuntimeError):
+            OptionalEncoder._encode(no_children, 42, **default_options)
+
+    def test_decode_raises_on_wrong_node_type(
+        self, default_options: InternalOptions
+    ) -> None:
+        wrong_node = FieldsDeff("wrong", InternalTypes.INT.value).to_tree_node()
+        with pytest.raises(TypeError):
+            OptionalEncoder._decode(wrong_node, b"\x00", **default_options)
+
+    def test_decode_raises_when_no_children(
+        self, default_options: InternalOptions
+    ) -> None:
+        no_children = OptionalDeff("test").to_tree_node()
+        with pytest.raises(RuntimeError):
+            OptionalEncoder._decode(no_children, b"\x01", **default_options)

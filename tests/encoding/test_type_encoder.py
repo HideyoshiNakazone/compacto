@@ -1,8 +1,12 @@
 from compacto.encoding import TypeEncoder
+from compacto.encoding.field_encoder import FieldEncoder
+from compacto.struct_parser import FieldsDeff
 from compacto.utils.constants import InternalTypes
+from compacto.utils.exceptions import AssertionException, DecodingException
 
 import pytest
 
+from enum import Enum
 from types import EllipsisType
 
 
@@ -38,3 +42,28 @@ class TestTypeEncoder:
                 def _encode(self, obj: EllipsisType) -> bytes: ...
 
                 def _decode(self, obj: bytes) -> EllipsisType: ...
+
+    def test_encode_wraps_exception_as_decoding_exception(self) -> None:
+        node = FieldsDeff("test", InternalTypes.INT.value).to_tree_node()
+        with pytest.raises(DecodingException):
+            FieldEncoder.encode(node, "not_an_int")
+
+    def test_decode_wraps_exception_as_decoding_exception(self) -> None:
+        node = FieldsDeff("test", InternalTypes.INT.value).to_tree_node()
+        with pytest.raises(DecodingException):
+            FieldEncoder.decode(node, b"")  # too few bytes to unpack an int
+
+    def test_init_subclass_raises_assertion_when_mapped_type_value_is_not_internal_type(
+        self,
+    ) -> None:
+        class FakeEnum(Enum):
+            FAKE = "not_an_internal_type"
+
+        with pytest.raises(AssertionException):
+
+            class BadEncoder(TypeEncoder):
+                mapped_type = FakeEnum.FAKE
+
+                def _encode(self, node, value, **options): ...
+
+                def _decode(self, node, data, **options): ...

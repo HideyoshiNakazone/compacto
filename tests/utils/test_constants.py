@@ -1,5 +1,6 @@
-from compacto.utils.constants import InternalTypes
+from compacto.utils.constants import CustomType, InternalTypes
 
+import pytest
 from typing_extensions import Union
 
 import ctypes
@@ -106,3 +107,19 @@ class TestInternalTypes:
         assert InternalTypes.LIST.value.get_python_type() is list
         assert InternalTypes.OPTIONAL.value.get_python_type() is ...
         assert InternalTypes.OBJECT.value.get_python_type() is object
+
+    def test_internal_types_get_python_type_delegates_to_value(self) -> None:
+        assert InternalTypes.INT.get_python_type() is int
+        assert InternalTypes.BOOL.get_python_type() is bool
+        assert InternalTypes.DOUBLE.get_python_type() is float
+        assert InternalTypes.STRING.get_python_type() is str
+
+    def test_custom_type_get_byte_size_raises_not_implemented(self) -> None:
+        ct = CustomType(type=str)
+        with pytest.raises(NotImplementedError):
+            ct.get_byte_size(False)
+
+    def test_custom_type_get_struct_token_raises_not_implemented(self) -> None:
+        ct = CustomType(type=str)
+        with pytest.raises(NotImplementedError):
+            ct.get_struct_token(False)

@@ -6,6 +6,8 @@ from compacto.utils.tree_node import TreeNode
 
 import pytest
 
+import struct
+
 
 class TestListEncoder:
     @pytest.fixture
@@ -62,3 +64,33 @@ class TestListEncoder:
         )
 
         assert list_value == decoded_list_int
+
+    def test_encode_raises_on_wrong_node_type(
+        self, default_options: InternalOptions
+    ) -> None:
+        wrong_node = FieldsDeff("wrong", InternalTypes.INT.value).to_tree_node()
+        with pytest.raises(TypeError):
+            ListEncoder._encode(wrong_node, [], **default_options)
+
+    def test_encode_raises_when_no_children(
+        self, default_options: InternalOptions
+    ) -> None:
+        no_children = ListDeff("test").to_tree_node()
+        with pytest.raises(RuntimeError):
+            ListEncoder._encode(no_children, [1, 2, 3], **default_options)
+
+    def test_decode_raises_on_wrong_node_type(
+        self, default_options: InternalOptions
+    ) -> None:
+        wrong_node = FieldsDeff("wrong", InternalTypes.INT.value).to_tree_node()
+        empty_len = struct.pack(">I", 0)
+        with pytest.raises(TypeError):
+            ListEncoder._decode(wrong_node, empty_len, **default_options)
+
+    def test_decode_raises_when_no_children(
+        self, default_options: InternalOptions
+    ) -> None:
+        no_children = ListDeff("test").to_tree_node()
+        empty_len = struct.pack(">I", 0)
+        with pytest.raises(RuntimeError):
+            ListEncoder._decode(no_children, empty_len, **default_options)
