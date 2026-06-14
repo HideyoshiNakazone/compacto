@@ -1,11 +1,12 @@
 from compacto.encoding.type_encoder import TypeEncoder
+from compacto.encoding_headers import InternalOptions
 from compacto.struct_parser import StructTyping
 from compacto.utils.constants import (
     InternalTypes,
 )
 from compacto.utils.tree_node import TreeNode
 
-from typing_extensions import Tuple
+from typing_extensions import Buffer, Tuple, Unpack
 
 import struct
 
@@ -14,15 +15,35 @@ class ByteEncoder(TypeEncoder):
     mapped_type = InternalTypes.BYTES
 
     @staticmethod
-    def _encode(node: TreeNode[StructTyping], value: bytes) -> bytes:
-        buf = bytearray(InternalTypes.UINT64.get_byte_size() + len(value))
-        struct.pack_into(InternalTypes.UINT64.get_struct_token(), buf, 0, len(value))
-        buf[InternalTypes.UINT64.get_byte_size() :] = value
+    def _encode(
+        node: TreeNode[StructTyping],
+        value: bytes,
+        is_little_endian: bool,
+        **options: Unpack[InternalOptions],
+    ) -> Buffer:
+        len_buff_size = InternalTypes.UINT64.get_byte_size(
+            is_little_endian
+        )  # the endian order is required because in some cases it can make a uint64 be only 4bytes instead of 8bytes
+
+        buf = bytearray(len_buff_size + len(value))
+        struct.pack_into(
+            InternalTypes.UINT64.get_struct_token(is_little_endian), buf, 0, len(value)
+        )
+        buf[len_buff_size:] = value
+
         return bytes(buf)
 
     @staticmethod
-    def _decode(_: TreeNode[StructTyping], data: bytes) -> Tuple[bytes, int]:
+    def _decode(
+        _: TreeNode[StructTyping],
+        data: Buffer,
+        is_little_endian: bool,
+        **options: Unpack[InternalOptions],
+    ) -> Tuple[bytes, int]:
         data = memoryview(data)
-        (length,) = struct.unpack_from(InternalTypes.UINT64.get_struct_token(), data)
-        data = data[InternalTypes.UINT64.get_byte_size() :]
-        return data[:length].tobytes(), InternalTypes.UINT64.get_byte_size() + length
+        (length,) = struct.unpack_from(
+            InternalTypes.UINT64.get_struct_token(is_little_endian), data
+        )
+        len_buff_size = InternalTypes.UINT64.get_byte_size(is_little_endian)
+        data = data[len_buff_size:]
+        return data[:length].tobytes(), len_buff_size + length

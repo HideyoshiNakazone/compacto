@@ -11,6 +11,7 @@ from typing_extensions import (
 )
 
 import ctypes
+import struct
 from dataclasses import dataclass
 from enum import Enum
 
@@ -23,8 +24,8 @@ def is_optional(type_origin: type, type_args: Iterable[type]) -> bool:
 @runtime_checkable
 class InternalType(Protocol):
     def get_python_type(self) -> type: ...
-    def get_byte_size(self) -> int | None: ...
-    def get_struct_token(self) -> str | None: ...
+    def get_byte_size(self, is_little_endian: bool) -> int: ...
+    def get_struct_token(self, is_little_endian: bool) -> str: ...
     def is_root_type(self) -> bool: ...
 
 
@@ -36,11 +37,12 @@ class Ctype(InternalType):
     def get_python_type(self) -> type:
         return type(self.ctype().value)
 
-    def get_byte_size(self) -> int:
-        return ctypes.sizeof(self.ctype)
+    def get_byte_size(self, is_little_endian: bool) -> int:
+        return struct.calcsize(self.get_struct_token(is_little_endian))
 
-    def get_struct_token(self) -> str:
-        return self.ctype._type_
+    def get_struct_token(self, is_little_endian: bool) -> str:
+        endian_token = "<" if is_little_endian else ">"
+        return f"{endian_token}{self.ctype._type_}"
 
     def is_root_type(self) -> bool:
         return self.root
@@ -56,11 +58,11 @@ class CustomType(InternalType, Generic[T]):
     def get_python_type(self) -> T:
         return self.type
 
-    def get_byte_size(self) -> int | None:
-        return None
+    def get_byte_size(self, is_little_endian: bool) -> int:
+        raise NotImplementedError
 
-    def get_struct_token(self) -> str | None:
-        return None
+    def get_struct_token(self, is_little_endian: bool) -> str:
+        raise NotImplementedError
 
     def is_root_type(self) -> bool:
         return True
@@ -73,11 +75,11 @@ class InternalTypes(Enum):
     INT_8 = Ctype(ctypes.c_int8)
     INT_16 = Ctype(ctypes.c_int16)
     INT_32 = Ctype(ctypes.c_int32)
-    INT_64 = Ctype(ctypes.c_int64)
+    INT_64 = Ctype(ctypes.c_longlong)
     UINT8 = Ctype(ctypes.c_uint8)
     UINT16 = Ctype(ctypes.c_uint16)
     UINT32 = Ctype(ctypes.c_uint32)
-    UINT64 = Ctype(ctypes.c_uint64)
+    UINT64 = Ctype(ctypes.c_ulonglong)
     UINT = Ctype(ctypes.c_uint)
     INT = Ctype(ctypes.c_int, root=True)
 
@@ -98,11 +100,11 @@ class InternalTypes(Enum):
     def get_python_type(self) -> type:
         return self.value.get_python_type()
 
-    def get_byte_size(self) -> int | None:
-        return self.value.get_byte_size()
+    def get_byte_size(self, is_little_endian: bool) -> int:
+        return self.value.get_byte_size(is_little_endian)
 
-    def get_struct_token(self) -> str | None:
-        return self.value.get_struct_token()
+    def get_struct_token(self, is_little_endian: bool) -> str:
+        return self.value.get_struct_token(is_little_endian)
 
     @classmethod
     def get_from_type(

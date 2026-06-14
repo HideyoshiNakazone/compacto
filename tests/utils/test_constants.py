@@ -13,7 +13,7 @@ class InternalTestClass:
 
 class TestInternalTypes:
     def test_get_byte_size(self) -> None:
-        assert InternalTypes.BOOL.value.get_byte_size() == 1
+        assert InternalTypes.BOOL.value.get_byte_size(True) == 1
 
     def test_get_from_type_with_ctype(self) -> None:
         assert InternalTypes.get_from_type(bool, ...) == InternalTypes.BOOL
@@ -72,19 +72,19 @@ class TestInternalTypes:
         )
 
     def test_get_struct_token(self) -> None:
-        assert InternalTypes.BOOL.value.get_struct_token() == "?"
-        assert InternalTypes.INT_8.value.get_struct_token() == "b"
-        assert InternalTypes.INT_16.value.get_struct_token() == "h"
-        assert InternalTypes.INT_32.value.get_struct_token() == "i"
-        assert InternalTypes.INT_64.value.get_struct_token() == "l"
-        assert InternalTypes.UINT8.value.get_struct_token() == "B"
-        assert InternalTypes.UINT16.value.get_struct_token() == "H"
-        assert InternalTypes.UINT32.value.get_struct_token() == "I"
-        assert InternalTypes.UINT64.value.get_struct_token() == "L"
-        assert InternalTypes.UINT.value.get_struct_token() == "I"
-        assert InternalTypes.INT.value.get_struct_token() == "i"
-        assert InternalTypes.FLOAT.value.get_struct_token() == "f"
-        assert InternalTypes.DOUBLE.value.get_struct_token() == "d"
+        assert InternalTypes.BOOL.value.get_struct_token(True) == "<?"
+        assert InternalTypes.INT_8.value.get_struct_token(True) == "<b"
+        assert InternalTypes.INT_16.value.get_struct_token(True) == "<h"
+        assert InternalTypes.INT_32.value.get_struct_token(True) == "<i"
+        assert InternalTypes.INT_64.value.get_struct_token(True) == "<l"
+        assert InternalTypes.UINT8.value.get_struct_token(True) == "<B"
+        assert InternalTypes.UINT16.value.get_struct_token(True) == "<H"
+        assert InternalTypes.UINT32.value.get_struct_token(True) == "<I"
+        assert InternalTypes.UINT64.value.get_struct_token(True) == "<L"
+        assert InternalTypes.UINT.value.get_struct_token(True) == "<I"
+        assert InternalTypes.INT.value.get_struct_token(True) == "<i"
+        assert InternalTypes.FLOAT.value.get_struct_token(True) == "<f"
+        assert InternalTypes.DOUBLE.value.get_struct_token(True) == "<d"
 
     def test_get_python_type(self) -> None:
         assert InternalTypes.BOOL.value.get_python_type() is bool
