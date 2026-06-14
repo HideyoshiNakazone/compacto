@@ -2,7 +2,7 @@ from compacto.encoding.bytes_encoder import ByteEncoder
 from compacto.utils.constants import InternalTypes
 
 
-SIZE_UNSIGNED_LONG_LONG = InternalTypes.UINT64.get_byte_size()
+SIZE_UNSIGNED_LONG_LONG = InternalTypes.UINT64.get_byte_size(False)
 
 
 class TestByteEncoder:

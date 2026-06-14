@@ -6,7 +6,7 @@ from compacto.utils.tree_node import TreeNode
 import pytest
 
 
-SIZE_DOUBLE = InternalTypes.DOUBLE.get_byte_size()
+SIZE_DOUBLE = InternalTypes.DOUBLE.get_byte_size(True)
 
 
 class TestFieldEncoder:

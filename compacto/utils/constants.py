@@ -24,8 +24,8 @@ def is_optional(type_origin: type, type_args: Iterable[type]) -> bool:
 @runtime_checkable
 class InternalType(Protocol):
     def get_python_type(self) -> type: ...
-    def get_byte_size(self) -> int: ...
-    def get_struct_token(self, is_little_endian: Optional[bool] = None) -> str: ...
+    def get_byte_size(self, is_little_endian: bool) -> int: ...
+    def get_struct_token(self, is_little_endian: bool) -> str: ...
     def is_root_type(self) -> bool: ...
 
 
@@ -37,12 +37,10 @@ class Ctype(InternalType):
     def get_python_type(self) -> type:
         return type(self.ctype().value)
 
-    def get_byte_size(self, is_little_endian: Optional[bool] = None) -> int:
+    def get_byte_size(self, is_little_endian: bool) -> int:
         return struct.calcsize(self.get_struct_token(is_little_endian))
 
-    def get_struct_token(self, is_little_endian: Optional[bool] = None) -> str:
-        if is_little_endian is None:
-            return self.ctype._type_
+    def get_struct_token(self, is_little_endian: bool) -> str:
         endian_token = "<" if is_little_endian else ">"
         return f"{endian_token}{self.ctype._type_}"
 
@@ -60,10 +58,10 @@ class CustomType(InternalType, Generic[T]):
     def get_python_type(self) -> T:
         return self.type
 
-    def get_byte_size(self) -> int:
+    def get_byte_size(self, is_little_endian: bool) -> int:
         raise NotImplementedError
 
-    def get_struct_token(self, is_little_endian: Optional[bool] = None) -> str:
+    def get_struct_token(self, is_little_endian: bool) -> str:
         raise NotImplementedError
 
     def is_root_type(self) -> bool:
@@ -102,10 +100,10 @@ class InternalTypes(Enum):
     def get_python_type(self) -> type:
         return self.value.get_python_type()
 
-    def get_byte_size(self, is_little_endian: Optional[bool] = None) -> int:
+    def get_byte_size(self, is_little_endian: bool) -> int:
         return self.value.get_byte_size(is_little_endian)
 
-    def get_struct_token(self, is_little_endian: Optional[bool] = None) -> str:
+    def get_struct_token(self, is_little_endian: bool) -> str:
         return self.value.get_struct_token(is_little_endian)
 
     @classmethod

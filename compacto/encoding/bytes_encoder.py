@@ -44,8 +44,6 @@ class ByteEncoder(TypeEncoder):
         (length,) = struct.unpack_from(
             InternalTypes.UINT64.get_struct_token(is_little_endian), data
         )
-        len_buff_size = InternalTypes.UINT64.get_byte_size(
-            is_little_endian
-        )  # the endian order is required because in some cases it can make a uint64 be only 4bytes instead of 8bytes
+        len_buff_size = InternalTypes.UINT64.get_byte_size(is_little_endian)
         data = data[len_buff_size:]
         return data[:length].tobytes(), len_buff_size + length

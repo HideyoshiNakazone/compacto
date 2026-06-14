@@ -17,8 +17,8 @@ import struct
 from dataclasses import dataclass
 
 
-SIZE_BOOL = InternalTypes.BOOL.get_byte_size()
-BOOL_TYPE_TOKEN = InternalTypes.BOOL.get_struct_token()
+SIZE_BOOL = InternalTypes.BOOL.get_byte_size(True)
+BOOL_TYPE_TOKEN = InternalTypes.BOOL.get_struct_token(True)
 
 
 @dataclass
