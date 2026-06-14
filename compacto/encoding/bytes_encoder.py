@@ -6,7 +6,7 @@ from compacto.utils.constants import (
 )
 from compacto.utils.tree_node import TreeNode
 
-from typing_extensions import Tuple, Unpack
+from typing_extensions import Buffer, Tuple, Unpack
 
 import struct
 
@@ -21,17 +21,20 @@ class ByteEncoder(TypeEncoder):
         is_little_endian: bool,
         **options: Unpack[InternalOptions],
     ) -> bytes:
-        buf = bytearray(InternalTypes.UINT64.get_byte_size() + len(value))
+        len_buff_size = InternalTypes.UINT64.get_byte_size(is_little_endian)
+
+        buf = bytearray(len_buff_size + len(value))
         struct.pack_into(
             InternalTypes.UINT64.get_struct_token(is_little_endian), buf, 0, len(value)
         )
-        buf[InternalTypes.UINT64.get_byte_size() :] = value
+        buf[len_buff_size:] = value
+
         return bytes(buf)
 
     @staticmethod
     def _decode(
         _: TreeNode[StructTyping],
-        data: bytes,
+        data: Buffer,
         is_little_endian: bool,
         **options: Unpack[InternalOptions],
     ) -> Tuple[bytes, int]:
@@ -39,5 +42,6 @@ class ByteEncoder(TypeEncoder):
         (length,) = struct.unpack_from(
             InternalTypes.UINT64.get_struct_token(is_little_endian), data
         )
-        data = data[InternalTypes.UINT64.get_byte_size() :]
-        return data[:length].tobytes(), InternalTypes.UINT64.get_byte_size() + length
+        len_buff_size = InternalTypes.UINT64.get_byte_size(is_little_endian)
+        data = data[len_buff_size:]
+        return data[:length].tobytes(), len_buff_size + length

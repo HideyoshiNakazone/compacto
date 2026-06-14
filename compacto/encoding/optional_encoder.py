@@ -4,7 +4,7 @@ from compacto.struct_parser import OptionalDeff, StructTyping
 from compacto.utils.constants import InternalTypes
 from compacto.utils.tree_node import TreeNode
 
-from typing_extensions import Any, Optional, Tuple, Unpack
+from typing_extensions import Any, Buffer, Optional, Tuple, Unpack
 
 import struct
 
@@ -44,7 +44,7 @@ class OptionalEncoder(TypeEncoder):
 
     @staticmethod
     def _decode(
-        node: TreeNode[StructTyping], data: bytes, **options: Unpack[InternalOptions]
+        node: TreeNode[StructTyping], data: Buffer, **options: Unpack[InternalOptions]
     ) -> Tuple[Optional[Any], int]:
         if not isinstance(node.data, OptionalDeff):
             raise TypeError(f"Unsupported field type: {type(node.data)}")

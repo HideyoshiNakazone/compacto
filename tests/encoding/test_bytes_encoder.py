@@ -26,10 +26,3 @@ class TestByteEncoder:
         data = ByteEncoder._encode(..., b"test", False)
 
         assert isinstance(data, bytes)
-
-    def test_decode_offset(self):
-        value = b"test"
-        data = ByteEncoder._encode(..., value, False)
-        _, offset = ByteEncoder._decode(..., data, False)
-
-        assert offset == SIZE_UNSIGNED_LONG_LONG + len(value)

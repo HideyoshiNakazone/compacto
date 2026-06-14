@@ -11,6 +11,7 @@ from typing_extensions import (
 )
 
 import ctypes
+import struct
 from dataclasses import dataclass
 from enum import Enum
 
@@ -36,8 +37,8 @@ class Ctype(InternalType):
     def get_python_type(self) -> type:
         return type(self.ctype().value)
 
-    def get_byte_size(self) -> int:
-        return ctypes.sizeof(self.ctype)
+    def get_byte_size(self, is_little_endian: Optional[bool] = None) -> int:
+        return struct.calcsize(self.get_struct_token(is_little_endian))
 
     def get_struct_token(self, is_little_endian: Optional[bool] = None) -> str:
         if is_little_endian is None:
@@ -76,11 +77,11 @@ class InternalTypes(Enum):
     INT_8 = Ctype(ctypes.c_int8)
     INT_16 = Ctype(ctypes.c_int16)
     INT_32 = Ctype(ctypes.c_int32)
-    INT_64 = Ctype(ctypes.c_int64)
+    INT_64 = Ctype(ctypes.c_longlong)
     UINT8 = Ctype(ctypes.c_uint8)
     UINT16 = Ctype(ctypes.c_uint16)
     UINT32 = Ctype(ctypes.c_uint32)
-    UINT64 = Ctype(ctypes.c_uint64)
+    UINT64 = Ctype(ctypes.c_ulonglong)
     UINT = Ctype(ctypes.c_uint)
     INT = Ctype(ctypes.c_int, root=True)
 
@@ -101,8 +102,8 @@ class InternalTypes(Enum):
     def get_python_type(self) -> type:
         return self.value.get_python_type()
 
-    def get_byte_size(self) -> int:
-        return self.value.get_byte_size()
+    def get_byte_size(self, is_little_endian: Optional[bool] = None) -> int:
+        return self.value.get_byte_size(is_little_endian)
 
     def get_struct_token(self, is_little_endian: Optional[bool] = None) -> str:
         return self.value.get_struct_token(is_little_endian)

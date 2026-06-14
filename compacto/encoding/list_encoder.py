@@ -6,7 +6,7 @@ from compacto.utils.constants import (
 )
 from compacto.utils.tree_node import TreeNode
 
-from typing_extensions import Tuple, Unpack
+from typing_extensions import Buffer, Tuple, Unpack
 
 import struct
 
@@ -35,13 +35,13 @@ class ListEncoder(TypeEncoder):
         if not child_encoder:
             raise RuntimeError("Failed to determine the type of list element.")
 
-        encoded_elements = bytearray(InternalTypes.UINT64.get_byte_size())
+        encoded_elements = bytearray()
 
-        struct.pack_into(
-            InternalTypes.UINT64.get_struct_token(is_little_endian),
-            encoded_elements,
-            0,
-            len(value),
+        encoded_elements.extend(
+            struct.pack(
+                InternalTypes.UINT64.get_struct_token(is_little_endian),
+                len(value),
+            )
         )
 
         for ele_value in value:
@@ -56,7 +56,7 @@ class ListEncoder(TypeEncoder):
     @staticmethod
     def _decode(
         node: TreeNode[StructTyping],
-        data: bytes,
+        data: Buffer,
         is_little_endian: bool,
         **options: Unpack[InternalOptions],
     ) -> Tuple[list, int]:
@@ -74,18 +74,17 @@ class ListEncoder(TypeEncoder):
         if not child_encoder:
             raise RuntimeError("Failed to determine the type of list element.")
 
-        data = memoryview(data)
         (arr_len,) = struct.unpack_from(
             InternalTypes.UINT64.get_struct_token(is_little_endian), data
         )
 
-        offset = InternalTypes.UINT64.get_byte_size()
+        offset = InternalTypes.UINT64.get_byte_size(is_little_endian)
         arr_elements = []
 
         for _ in range(arr_len):
             elem_value, elem_offset = child_encoder.decode(
                 child_node,
-                data[offset:].tobytes(),
+                data[offset:],
                 is_little_endian=is_little_endian,
                 **options,
             )

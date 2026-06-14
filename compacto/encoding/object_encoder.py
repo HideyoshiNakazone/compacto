@@ -8,7 +8,7 @@ from compacto.struct_parser import (
 from compacto.utils.constants import InternalTypes
 from compacto.utils.tree_node import TreeNode
 
-from typing_extensions import Tuple, Unpack
+from typing_extensions import Buffer, Tuple, Unpack
 
 
 class ObjectEncoder(TypeEncoder):
@@ -30,7 +30,7 @@ class ObjectEncoder(TypeEncoder):
 
     @staticmethod
     def _decode(
-        node: TreeNode[ObjectDeff], data: bytes, **options: Unpack[InternalOptions]
+        node: TreeNode[ObjectDeff], data: Buffer, **options: Unpack[InternalOptions]
     ) -> Tuple[object, int]:
         typing_tree = struct_parser(node.data.field_clzz)
 

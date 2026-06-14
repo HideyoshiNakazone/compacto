@@ -9,6 +9,7 @@ from compacto.utils.exceptions import (
 from compacto.utils.tree_node import TreeNode
 
 from typing_extensions import (
+    Buffer,
     ClassVar,
     Protocol,
     Self,
@@ -48,6 +49,7 @@ class TypeEncoder(Protocol):
         **options: Unpack[InternalOptions],
     ) -> T:
         try:
+            data = memoryview(data)
             return cls._decode(node, data, **options)
         except Exception as err:
             raise DecodingException(
@@ -69,12 +71,12 @@ class TypeEncoder(Protocol):
 
     @staticmethod
     def _decode(
-        node: TreeNode[StructTyping], data: bytes, **options: Unpack[InternalOptions]
+        node: TreeNode[StructTyping], data: Buffer, **options: Unpack[InternalOptions]
     ) -> Tuple[T, int]:
         """
         Decoder implementation per type
         :param node: definition of the type to decode
-        :param data: byte encoded data
+        :param data: Buffer of encoded data
         :return: Tuple of (decoded value, number of bytes consumed)
         """
         ...

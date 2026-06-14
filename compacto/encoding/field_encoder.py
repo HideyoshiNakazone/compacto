@@ -6,7 +6,7 @@ from compacto.utils.constants import (
 )
 from compacto.utils.tree_node import TreeNode
 
-from typing_extensions import Any, Tuple, Unpack
+from typing_extensions import Any, Buffer, Tuple, Unpack
 
 import struct
 
@@ -28,11 +28,11 @@ class FieldEncoder(TypeEncoder):
     @staticmethod
     def _decode(
         node: TreeNode[FieldsDeff],
-        data: bytes,
+        data: Buffer,
         is_little_endian: bool,
         **options: Unpack[InternalOptions],
     ) -> Tuple[float, int]:
         (value,) = struct.unpack_from(
             node.data.field_impl.get_struct_token(is_little_endian), data
         )
-        return value, node.data.field_impl.get_byte_size()
+        return value, node.data.field_impl.get_byte_size(is_little_endian)
