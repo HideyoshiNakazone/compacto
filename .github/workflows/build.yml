@@ -49,6 +49,7 @@ jobs:
         uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
+          slug: HideyoshiNakazone/compacto
         if: matrix.python-version == '3.10'
 
   publish:
