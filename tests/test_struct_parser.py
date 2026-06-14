@@ -1,4 +1,5 @@
 from compacto.struct_parser import (
+    BytesDeff,
     FieldsDeff,
     ListDeff,
     ObjectDeff,
@@ -6,10 +7,12 @@ from compacto.struct_parser import (
     StringDeff,
     struct_parser,
 )
+from compacto.utils.exceptions import TypeParsingException
 
 import pytest
-from typing_extensions import Optional
+from typing_extensions import Annotated, Optional, Union
 
+import ctypes
 from dataclasses import dataclass
 
 
@@ -44,3 +47,44 @@ def test_struct_parser_valid_annotations() -> None:
     assert isinstance(typing_tree.children[1].data, FieldsDeff)
     assert isinstance(typing_tree.children[2].data, OptionalDeff)
     assert isinstance(typing_tree.children[3].data, ListDeff)
+
+
+def test_struct_parser_bytes_field() -> None:
+    @dataclass
+    class WithBytes:
+        data: bytes
+
+    typing_tree = struct_parser(WithBytes)
+
+    assert isinstance(typing_tree.children[0].data, BytesDeff)
+
+
+def test_struct_parser_bare_list_raises() -> None:
+    @dataclass
+    class BareList:
+        items: list
+
+    with pytest.raises(
+        TypeParsingException, match="list fields must have a type argument"
+    ):
+        struct_parser(BareList)
+
+
+def test_struct_parser_union_multiple_non_none_raises() -> None:
+    @dataclass
+    class MultiUnion:
+        x: Union[int, str, None]
+
+    with pytest.raises(
+        TypeParsingException, match="optional fields must wrap exactly one type"
+    ):
+        struct_parser(MultiUnion)
+
+
+def test_struct_parser_annotated_with_instance_raises() -> None:
+    @dataclass
+    class BadAnnotation:
+        x: Annotated[int, ctypes.c_int32()]  # instance, not a type
+
+    with pytest.raises(TypeParsingException, match="a instance is not accepted"):
+        struct_parser(BadAnnotation)

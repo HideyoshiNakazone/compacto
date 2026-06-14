@@ -7,6 +7,7 @@ from pydantic import Field
 from typing_extensions import Annotated, NamedTuple, Optional
 
 import ctypes
+import struct
 import sys
 from dataclasses import dataclass
 
@@ -94,6 +95,19 @@ class TestSerialization:
 
         with pytest.raises(InvalidHeaderException):
             _ = unpack(Data2, data)
+
+    def test_unpack_raises_on_version_mismatch(self) -> None:
+        @dataclass
+        class Point:
+            x: float
+            y: float
+
+        data = bytearray(pack(Point(1.0, 2.0)))
+        # Version is at bytes [2:4] (big-endian uint16 after the 2-byte options field)
+        struct.pack_into(">H", data, 2, 0xFFFF)
+
+        with pytest.raises(InvalidHeaderException):
+            unpack(Point, bytes(data))
 
 
 class TestInspect:
