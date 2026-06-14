@@ -26,14 +26,14 @@ class TestListEncoder:
         self,
         obj_deff: TreeNode[StructTyping],
         clzz_test: type,
-        options: InternalOptions,
+        default_options: InternalOptions,
     ) -> None:
         test_obj = clzz_test(
             a=42,
             b="hello",
         )
 
-        data = ObjectEncoder._encode(obj_deff, test_obj, **options)
-        decoded_obj, _ = ObjectEncoder._decode(obj_deff, data, **options)
+        data = ObjectEncoder._encode(obj_deff, test_obj, **default_options)
+        decoded_obj, _ = ObjectEncoder._decode(obj_deff, data, **default_options)
 
         assert test_obj == decoded_obj

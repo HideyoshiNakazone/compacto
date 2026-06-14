@@ -71,25 +71,23 @@ A ``uint16`` bitmask. Individual bits are defined as:
      - Effect
    * - 0
      - ``0x0001``
-     - *(unused)*
-     - Reserved — must be zero.
-   * - 1
-     - ``0x0002``
      - ``IS_LITTLE_ENDIAN``
      - Payload is encoded in little-endian byte order. The header remains
        big-endian. Pass ``is_little_endian=True`` to :func:`pack` to set this
        flag.
-   * - 2
-     - ``0x0004``
+   * - 1
+     - ``0x0002``
      - ``IS_8_BYTE_HASH``
      - The schema hash field is a ``uint64`` (8 bytes) instead of the default
        ``uint32`` (4 bytes). Pass ``is_8_byte_hash=True`` to :func:`pack` to
        set this flag. This shifts the payload start from byte 8 to byte 12.
-   * - 3
-     - ``0x0008``
-     - *(reserved)*
-     - Reserved for a future ``IS_COMPRESSED`` flag.
-   * - 4–15
+   * - 2
+     - ``0x0004``
+     - ``IS_LENGTH_64_BYTES``
+     - Length prefixes for ``str``, ``bytes``, and ``list`` fields are encoded
+       as ``uint64`` (8 bytes) instead of the default ``uint32`` (4 bytes).
+       Pass ``is_length_64_bytes=True`` to :func:`pack` to set this flag.
+   * - 3–15
      - —
      - *(reserved)*
      - Unknown flags should be ignored to preserve forward compatibility.
@@ -356,7 +354,7 @@ Same struct encoded with ``is_little_endian=True``:
 
     Offset  Bytes          Description
     ──────  ─────────────  ──────────────────────────────────────────
-    0x00    00 02          Options = 0x0002  (IS_LITTLE_ENDIAN)
+    0x00    00 01          Options = 0x0001  (IS_LITTLE_ENDIAN)
     0x02    01 00          Version = 0x0100  (header still big-endian!)
     0x04    ?? ?? ?? ??    Schema Hash (4 bytes, same hash)
     0x08    00 00 00 00    x = 1.0  (IEEE 754 double, little-endian)
@@ -376,13 +374,16 @@ Minimum steps to decode a compacto frame:
 1. Read bytes 0–1 as a big-endian ``uint16`` → ``options``.
 2. Read bytes 2–3 as a big-endian ``uint16`` → ``version``. Check against your
    expected version.
-3. If ``options & 0x0004`` (``IS_8_BYTE_HASH``): read 8 bytes → ``schema_hash``,
+3. If ``options & 0x0002`` (``IS_8_BYTE_HASH``): read 8 bytes → ``schema_hash``,
    payload starts at byte 12.
    Otherwise: read 4 bytes → ``schema_hash``, payload starts at byte 8.
 4. Optionally verify ``schema_hash`` against your pre-computed value for the
    target struct.
-5. If ``options & 0x0002`` (``IS_LITTLE_ENDIAN``): decode payload fields as
+5. If ``options & 0x0001`` (``IS_LITTLE_ENDIAN``): decode payload fields as
    little-endian. Otherwise use big-endian.
+5a. If ``options & 0x0004`` (``IS_LENGTH_64_BYTES``): length prefixes for
+   ``str``, ``bytes``, and ``list`` fields are ``uint64`` (8 bytes). Otherwise
+   they are ``uint32`` (4 bytes).
 6. Decode each field in declaration order:
 
    * **Fixed-size primitive** — read *N* bytes and interpret as the appropriate

@@ -18,7 +18,7 @@ class FieldEncoder(TypeEncoder):
     def _encode(
         node: TreeNode[FieldsDeff],
         value: Any,
-        is_little_endian: bool,
+        is_little_endian: bool = False,
         **options: Unpack[InternalOptions],
     ) -> Buffer:
         return struct.pack(
@@ -29,7 +29,7 @@ class FieldEncoder(TypeEncoder):
     def _decode(
         node: TreeNode[FieldsDeff],
         data: Buffer,
-        is_little_endian: bool,
+        is_little_endian: bool = False,
         **options: Unpack[InternalOptions],
     ) -> Tuple[float, int]:
         (value,) = struct.unpack_from(

@@ -9,20 +9,20 @@ class TestByteEncoder:
     def test_encode_decode_bytes(self):
         value = b"Hello World"
 
-        data = ByteEncoder._encode(..., value, False)
-        decoded_value, offset = ByteEncoder._decode(..., data, False)
+        data = ByteEncoder._encode(..., value)
+        decoded_value, offset = ByteEncoder._decode(..., data)
 
         assert decoded_value == value
 
     def test_encode_decode_empty_bytes(self):
         value = b""
 
-        data = ByteEncoder._encode(..., value, False)
-        decoded_value, offset = ByteEncoder._decode(..., data, False)
+        data = ByteEncoder._encode(..., value)
+        decoded_value, offset = ByteEncoder._decode(..., data)
 
         assert decoded_value == value
 
     def test_encode_returns_bytes(self):
-        data = ByteEncoder._encode(..., b"test", False)
+        data = ByteEncoder._encode(..., b"test")
 
         assert isinstance(data, bytes)

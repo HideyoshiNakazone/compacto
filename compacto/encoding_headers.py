@@ -17,12 +17,14 @@ HEADER_ENDIAN = ">"
 class InternalOptions(TypedDict):
     is_little_endian: NotRequired[bool]
     is_8_byte_hash: NotRequired[bool]
+    is_length_64_bytes: NotRequired[bool]
 
 
 class OptionFlags(IntFlag):
     NONE = 0
-    IS_LITTLE_ENDIAN = 1 << 1
-    IS_8_BYTE_HASH = 1 << 2
+    IS_LITTLE_ENDIAN = 1
+    IS_8_BYTE_HASH = 1 << 1
+    IS_LENGTH_64_BYTES = 1 << 2
 
     @classmethod
     def from_internal_options(cls, options: InternalOptions) -> Self:
@@ -34,12 +36,16 @@ class OptionFlags(IntFlag):
         if options.get("is_8_byte_hash", False):
             options_flags |= cls.IS_8_BYTE_HASH
 
+        if options.get("is_length_64_bytes", False):
+            options_flags |= cls.IS_LENGTH_64_BYTES
+
         return options_flags
 
     def to_internal_options(self) -> InternalOptions:
         return InternalOptions(
             is_little_endian=(self.IS_LITTLE_ENDIAN in self),
             is_8_byte_hash=(self.IS_8_BYTE_HASH in self),
+            is_length_64_bytes=(self.IS_LENGTH_64_BYTES in self),
         )
 
 
@@ -95,9 +101,9 @@ Byte Offsets:
 
 Options Flags:
 
-    Bit 1 (0x0002) -> IS_LITTLE_ENDIAN
-    Bit 2 (0x0004) -> IS_8_BYTE_HASH
-    Bit 3 (0x0008) -> IS_COMPRESSED
+    Bit 0 (0x0001) -> IS_LITTLE_ENDIAN
+    Bit 1 (0x0002) -> IS_8_BYTE_HASH
+    Bit 2 (0x0004) -> IS_LENGTH_64_BYTES
 
 Notes:
 
@@ -112,7 +118,7 @@ Example:
 
     Header (big-endian):
     +----------+----------+-------------+
-    | 0x0002   | 0x0001   | hash bytes  |
+    | 0x0001   | 0x0001   | hash bytes  |
     +----------+----------+-------------+
 
     Options = IS_LITTLE_ENDIAN

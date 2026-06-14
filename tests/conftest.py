@@ -4,9 +4,9 @@ import pytest
 
 
 @pytest.fixture
-def options() -> InternalOptions:
+def default_options() -> InternalOptions:
     return InternalOptions(
-        is_little_endian=True,
+        is_little_endian=False,
         is_8_byte_hash=False,
-        is_compressed=False,
+        is_length_64_bytes=False,
     )

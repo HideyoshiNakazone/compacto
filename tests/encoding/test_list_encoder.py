@@ -25,36 +25,40 @@ class TestListEncoder:
         )
 
     def test_encode_decode_list_string(
-        self, string_list_deff: TreeNode[StructTyping], options: InternalOptions
+        self, string_list_deff: TreeNode[StructTyping], default_options: InternalOptions
     ):
         list_value = [
             "Hello",
             "World",
         ]
 
-        data = ListEncoder._encode(string_list_deff, list_value, **options)
+        data = ListEncoder._encode(string_list_deff, list_value, **default_options)
         decoded_list_string, offset = ListEncoder._decode(
-            string_list_deff, data, **options
+            string_list_deff, data, **default_options
         )
 
         assert list_value == decoded_list_string
 
     def test_encode_decode_list_int(
-        self, int_list_deff: TreeNode[StructTyping], options: InternalOptions
+        self, int_list_deff: TreeNode[StructTyping], default_options: InternalOptions
     ):
         list_value = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
 
-        data = ListEncoder._encode(int_list_deff, list_value, **options)
-        decoded_list_int, offset = ListEncoder._decode(int_list_deff, data, **options)
+        data = ListEncoder._encode(int_list_deff, list_value, **default_options)
+        decoded_list_int, offset = ListEncoder._decode(
+            int_list_deff, data, **default_options
+        )
 
         assert list_value == decoded_list_int
 
     def test_encode_decode_empty_list_struct(
-        self, int_list_deff: TreeNode[StructTyping], options: InternalOptions
+        self, int_list_deff: TreeNode[StructTyping], default_options: InternalOptions
     ):
         list_value = []
 
-        data = ListEncoder._encode(int_list_deff, list_value, **options)
-        decoded_list_int, offset = ListEncoder._decode(int_list_deff, data, **options)
+        data = ListEncoder._encode(int_list_deff, list_value, **default_options)
+        decoded_list_int, offset = ListEncoder._decode(
+            int_list_deff, data, **default_options
+        )
 
         assert list_value == decoded_list_int

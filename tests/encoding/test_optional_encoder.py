@@ -57,27 +57,33 @@ class TestOptionalEncoder:
     # --- encode ---
 
     def test_encode_none_writes_false_flag(
-        self, optional_int_node: TreeNode[StructTyping], options: InternalOptions
+        self,
+        optional_int_node: TreeNode[StructTyping],
+        default_options: InternalOptions,
     ) -> None:
-        data = OptionalEncoder._encode(optional_int_node, None, **options)
+        data = OptionalEncoder._encode(optional_int_node, None, **default_options)
 
         assert len(data) == SIZE_BOOL
         (flag,) = struct.unpack_from(BOOL_TYPE_TOKEN, data)
         assert flag is False
 
     def test_encode_present_int_writes_true_flag(
-        self, optional_int_node: TreeNode[StructTyping], options: InternalOptions
+        self,
+        optional_int_node: TreeNode[StructTyping],
+        default_options: InternalOptions,
     ) -> None:
-        data = OptionalEncoder._encode(optional_int_node, 42, **options)
+        data = OptionalEncoder._encode(optional_int_node, 42, **default_options)
 
         (flag,) = struct.unpack_from(BOOL_TYPE_TOKEN, data)
         assert flag is True
         assert len(data) > SIZE_BOOL
 
     def test_encode_present_str_writes_true_flag(
-        self, optional_str_node: TreeNode[StructTyping], options: InternalOptions
+        self,
+        optional_str_node: TreeNode[StructTyping],
+        default_options: InternalOptions,
     ) -> None:
-        data = OptionalEncoder._encode(optional_str_node, "hello", **options)
+        data = OptionalEncoder._encode(optional_str_node, "hello", **default_options)
 
         (flag,) = struct.unpack_from(BOOL_TYPE_TOKEN, data)
         assert flag is True
@@ -86,11 +92,13 @@ class TestOptionalEncoder:
     # --- decode ---
 
     def test_decode_none_returns_none_and_flag_offset(
-        self, optional_int_node: TreeNode[StructTyping], options: InternalOptions
+        self,
+        optional_int_node: TreeNode[StructTyping],
+        default_options: InternalOptions,
     ) -> None:
         none_bytes = struct.pack(BOOL_TYPE_TOKEN, False)
         value, offset = OptionalEncoder._decode(
-            optional_int_node, none_bytes, **options
+            optional_int_node, none_bytes, **default_options
         )
 
         assert value is None
@@ -99,51 +107,65 @@ class TestOptionalEncoder:
     # --- roundtrips ---
 
     def test_roundtrip_none_optional_int(
-        self, optional_int_node: TreeNode[StructTyping], options: InternalOptions
+        self,
+        optional_int_node: TreeNode[StructTyping],
+        default_options: InternalOptions,
     ) -> None:
-        data = OptionalEncoder._encode(optional_int_node, None, **options)
-        value, _ = OptionalEncoder._decode(optional_int_node, data, **options)
+        data = OptionalEncoder._encode(optional_int_node, None, **default_options)
+        value, _ = OptionalEncoder._decode(optional_int_node, data, **default_options)
 
         assert value is None
 
     def test_roundtrip_none_optional_str(
-        self, optional_str_node: TreeNode[StructTyping], options: InternalOptions
+        self,
+        optional_str_node: TreeNode[StructTyping],
+        default_options: InternalOptions,
     ) -> None:
-        data = OptionalEncoder._encode(optional_str_node, None, **options)
-        value, _ = OptionalEncoder._decode(optional_str_node, data, **options)
+        data = OptionalEncoder._encode(optional_str_node, None, **default_options)
+        value, _ = OptionalEncoder._decode(optional_str_node, data, **default_options)
 
         assert value is None
 
     def test_roundtrip_int(
-        self, optional_int_node: TreeNode[StructTyping], options: InternalOptions
+        self,
+        optional_int_node: TreeNode[StructTyping],
+        default_options: InternalOptions,
     ) -> None:
-        data = OptionalEncoder._encode(optional_int_node, 42, **options)
-        value, _ = OptionalEncoder._decode(optional_int_node, data, **options)
+        data = OptionalEncoder._encode(optional_int_node, 42, **default_options)
+        value, _ = OptionalEncoder._decode(optional_int_node, data, **default_options)
 
         assert value == 42
 
     def test_roundtrip_str(
-        self, optional_str_node: TreeNode[StructTyping], options: InternalOptions
+        self,
+        optional_str_node: TreeNode[StructTyping],
+        default_options: InternalOptions,
     ) -> None:
-        data = OptionalEncoder._encode(optional_str_node, "hello world", **options)
-        value, _ = OptionalEncoder._decode(optional_str_node, data, **options)
+        data = OptionalEncoder._encode(
+            optional_str_node, "hello world", **default_options
+        )
+        value, _ = OptionalEncoder._decode(optional_str_node, data, **default_options)
 
         assert value == "hello world"
 
     def test_roundtrip_nested_object(
-        self, optional_obj_node: TreeNode[StructTyping], options: InternalOptions
+        self,
+        optional_obj_node: TreeNode[StructTyping],
+        default_options: InternalOptions,
     ) -> None:
         inner = _Inner(x=10, y="test")
 
-        data = OptionalEncoder._encode(optional_obj_node, inner, **options)
-        value, _ = OptionalEncoder._decode(optional_obj_node, data, **options)
+        data = OptionalEncoder._encode(optional_obj_node, inner, **default_options)
+        value, _ = OptionalEncoder._decode(optional_obj_node, data, **default_options)
 
         assert value == inner
 
     def test_roundtrip_none_nested_object(
-        self, optional_obj_node: TreeNode[StructTyping], options: InternalOptions
+        self,
+        optional_obj_node: TreeNode[StructTyping],
+        default_options: InternalOptions,
     ) -> None:
-        data = OptionalEncoder._encode(optional_obj_node, None, **options)
-        value, _ = OptionalEncoder._decode(optional_obj_node, data, **options)
+        data = OptionalEncoder._encode(optional_obj_node, None, **default_options)
+        value, _ = OptionalEncoder._decode(optional_obj_node, data, **default_options)
 
         assert value is None
