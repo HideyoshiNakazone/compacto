@@ -16,18 +16,28 @@ class ByteEncoder(TypeEncoder):
 
     @staticmethod
     def _encode(
-        node: TreeNode[StructTyping], value: bytes, **options: Unpack[InternalOptions]
+        node: TreeNode[StructTyping],
+        value: bytes,
+        is_little_endian: bool,
+        **options: Unpack[InternalOptions],
     ) -> bytes:
         buf = bytearray(InternalTypes.UINT64.get_byte_size() + len(value))
-        struct.pack_into(InternalTypes.UINT64.get_struct_token(), buf, 0, len(value))
+        struct.pack_into(
+            InternalTypes.UINT64.get_struct_token(is_little_endian), buf, 0, len(value)
+        )
         buf[InternalTypes.UINT64.get_byte_size() :] = value
         return bytes(buf)
 
     @staticmethod
     def _decode(
-        _: TreeNode[StructTyping], data: bytes, **options: Unpack[InternalOptions]
+        _: TreeNode[StructTyping],
+        data: bytes,
+        is_little_endian: bool,
+        **options: Unpack[InternalOptions],
     ) -> Tuple[bytes, int]:
         data = memoryview(data)
-        (length,) = struct.unpack_from(InternalTypes.UINT64.get_struct_token(), data)
+        (length,) = struct.unpack_from(
+            InternalTypes.UINT64.get_struct_token(is_little_endian), data
+        )
         data = data[InternalTypes.UINT64.get_byte_size() :]
         return data[:length].tobytes(), InternalTypes.UINT64.get_byte_size() + length
