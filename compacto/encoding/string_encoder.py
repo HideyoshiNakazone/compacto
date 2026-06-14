@@ -16,20 +16,33 @@ class StringEncoder(TypeEncoder):
 
     @staticmethod
     def _encode(
-        node: TreeNode[StructTyping], value: str, **options: Unpack[InternalOptions]
+        node: TreeNode[StructTyping],
+        value: str,
+        is_little_endian: bool,
+        **options: Unpack[InternalOptions],
     ) -> bytes:
         encoded = value.encode("utf-8")
         buf = bytearray(InternalTypes.UINT64.get_byte_size() + len(encoded))
-        struct.pack_into(InternalTypes.UINT64.get_struct_token(), buf, 0, len(encoded))
+        struct.pack_into(
+            InternalTypes.UINT64.get_struct_token(is_little_endian),
+            buf,
+            0,
+            len(encoded),
+        )
         buf[InternalTypes.UINT64.get_byte_size() :] = encoded
         return bytes(buf)
 
     @staticmethod
     def _decode(
-        _: TreeNode[StructTyping], data: bytes, **options: Unpack[InternalOptions]
+        _: TreeNode[StructTyping],
+        data: bytes,
+        is_little_endian: bool,
+        **options: Unpack[InternalOptions],
     ) -> Tuple[str, int]:
         data = memoryview(data)
-        (length,) = struct.unpack_from(InternalTypes.UINT64.get_struct_token(), data)
+        (length,) = struct.unpack_from(
+            InternalTypes.UINT64.get_struct_token(is_little_endian), data
+        )
         data = data[InternalTypes.UINT64.get_byte_size() :]
         return data[:length].tobytes().decode(
             "utf-8"
