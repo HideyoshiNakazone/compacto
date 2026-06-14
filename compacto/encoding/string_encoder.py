@@ -21,7 +21,9 @@ class StringEncoder(TypeEncoder):
         is_little_endian: bool,
         **options: Unpack[InternalOptions],
     ) -> Buffer:
-        len_buff_size = InternalTypes.UINT64.get_byte_size(is_little_endian)
+        len_buff_size = InternalTypes.UINT64.get_byte_size(
+            is_little_endian
+        )  # the endian order is required because in some cases it can make a uint64 be only 4bytes instead of 8bytes
 
         encoded = value.encode("utf-8")
         buf = bytearray(len_buff_size + len(encoded))
@@ -42,7 +44,9 @@ class StringEncoder(TypeEncoder):
         is_little_endian: bool,
         **options: Unpack[InternalOptions],
     ) -> Tuple[str, int]:
-        len_buff_size = InternalTypes.UINT64.get_byte_size(is_little_endian)
+        len_buff_size = InternalTypes.UINT64.get_byte_size(
+            is_little_endian
+        )  # the endian order is required because in some cases it can make a uint64 be only 4bytes instead of 8bytes
 
         data = memoryview(data)
         (length,) = struct.unpack_from(
