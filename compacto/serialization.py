@@ -9,7 +9,9 @@ from compacto.utils.exceptions import InvalidHeaderException
 from typing_extensions import TypeVar, Unpack
 
 
-PROTOCOL_VERSION = 1
+PROTOCOL_MAJOR_VERSION = 1
+PROTOCOL_REVISION_VERSION = 0
+PROTOCOL_VERSION = (PROTOCOL_MAJOR_VERSION << 8) | (PROTOCOL_REVISION_VERSION << 0)
 
 
 T = TypeVar("T", bound=HasAnnotations)
