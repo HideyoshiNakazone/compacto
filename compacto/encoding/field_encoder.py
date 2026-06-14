@@ -20,7 +20,7 @@ class FieldEncoder(TypeEncoder):
         value: Any,
         is_little_endian: bool,
         **options: Unpack[InternalOptions],
-    ) -> bytes:
+    ) -> Buffer:
         return struct.pack(
             node.data.field_impl.get_struct_token(is_little_endian), value
         )

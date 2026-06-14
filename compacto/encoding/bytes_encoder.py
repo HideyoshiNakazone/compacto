@@ -20,7 +20,7 @@ class ByteEncoder(TypeEncoder):
         value: bytes,
         is_little_endian: bool,
         **options: Unpack[InternalOptions],
-    ) -> bytes:
+    ) -> Buffer:
         len_buff_size = InternalTypes.UINT64.get_byte_size(is_little_endian)
 
         buf = bytearray(len_buff_size + len(value))

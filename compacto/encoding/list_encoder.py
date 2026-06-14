@@ -20,7 +20,7 @@ class ListEncoder(TypeEncoder):
         value: list,
         is_little_endian: bool,
         **options: Unpack[InternalOptions],
-    ) -> bytes:
+    ) -> Buffer:
         if not isinstance(node.data, ListDeff):
             raise TypeError(f"Unsupported field type: {type(node.data)}")
 

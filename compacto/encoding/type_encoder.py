@@ -60,7 +60,7 @@ class TypeEncoder(Protocol):
     @staticmethod
     def _encode(
         node: TreeNode[StructTyping], value: T, **options: Unpack[InternalOptions]
-    ) -> bytes:
+    ) -> Buffer:
         """
         Encode a value to bytes.
         :param node: definition of the type to encode

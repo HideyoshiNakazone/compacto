@@ -17,7 +17,7 @@ class ObjectEncoder(TypeEncoder):
     @staticmethod
     def _encode(
         node: TreeNode[StructTyping], value: object, **options: Unpack[InternalOptions]
-    ) -> bytes:
+    ) -> Buffer:
         data = bytearray()
         for child_node in node:
             data.extend(

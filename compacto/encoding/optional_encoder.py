@@ -17,7 +17,7 @@ class OptionalEncoder(TypeEncoder):
         node: TreeNode[StructTyping],
         value: Optional[Any],
         **options: Unpack[InternalOptions],
-    ) -> bytes:
+    ) -> Buffer:
         if not isinstance(node.data, OptionalDeff):
             raise TypeError(f"Unsupported field type: {type(node.data)}")
 
