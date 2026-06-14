@@ -17,14 +17,12 @@ HEADER_ENDIAN = ">"
 class InternalOptions(TypedDict):
     is_little_endian: NotRequired[bool]
     is_8_byte_hash: NotRequired[bool]
-    is_compressed: NotRequired[bool]
 
 
 class OptionFlags(IntFlag):
     NONE = 0
     IS_LITTLE_ENDIAN = 1 << 1
     IS_8_BYTE_HASH = 1 << 2
-    IS_COMPRESSED = 1 << 3
 
     @classmethod
     def from_internal_options(cls, options: InternalOptions) -> Self:
@@ -36,16 +34,12 @@ class OptionFlags(IntFlag):
         if options.get("is_8_byte_hash", False):
             options_flags |= cls.IS_8_BYTE_HASH
 
-        if options.get("is_compressed", False):
-            options_flags |= cls.IS_COMPRESSED
-
         return options_flags
 
     def to_internal_options(self) -> InternalOptions:
         return InternalOptions(
             is_little_endian=(self.IS_LITTLE_ENDIAN in self),
             is_8_byte_hash=(self.IS_8_BYTE_HASH in self),
-            is_compressed=(self.IS_COMPRESSED in self),
         )
 
 

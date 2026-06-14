@@ -16,6 +16,11 @@ T = TypeVar("T", bound=HasAnnotations)
 
 
 def inspect(pos_data: type[T] | bytes) -> EncodingHeader:
+    """Return the encoding header for a type or encoded bytes.
+
+    When given a type, builds the header from its struct layout.
+    When given bytes, decodes the header from the binary data.
+    """
     if isinstance(pos_data, (bytes, bytearray, memoryview)):
         return EncodingHeader.decode(pos_data)
 
@@ -27,6 +32,11 @@ def inspect(pos_data: type[T] | bytes) -> EncodingHeader:
 
 
 def pack(obj: T, **kwargs: Unpack[InternalOptions]) -> bytes:
+    """Serialize an annotated struct instance to bytes.
+
+    Encodes the object preceded by a header containing the protocol version,
+    schema hash, and encoding options derived from ``kwargs``.
+    """
     typing_tree = struct_parser(type(obj))
     header = EncodingHeader.from_params(PROTOCOL_VERSION, typing_tree, **kwargs)
     encoded_data = TypeEncoder.pack(
@@ -40,6 +50,12 @@ def pack(obj: T, **kwargs: Unpack[InternalOptions]) -> bytes:
 
 
 def unpack(clzz: type[T], data: bytes) -> T:
+    """Deserialize bytes into an instance of ``clzz``.
+
+    Validates that the embedded header matches the expected protocol version
+    and schema hash before decoding, raising ``InvalidHeaderException`` on
+    any mismatch.
+    """
     typing_tree = struct_parser(clzz)
     header = EncodingHeader.decode(data)
 
