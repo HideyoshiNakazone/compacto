@@ -398,7 +398,7 @@ uv run poe type-check
 
 ## Roadmap
 
-- [ ] `Enum` — encode as underlying integer value for cross-language compatibility
+- [ ] `Dict` — encode dicts as a array of key-value pairs with length prefix (c implementation can use [stb_ds.h](https://github.com/nothings/stb/blob/master/stb_ds.h))
 
 ---
 
