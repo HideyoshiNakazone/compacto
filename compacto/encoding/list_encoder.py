@@ -18,7 +18,8 @@ class ListEncoder(TypeEncoder):
     def _encode(
         node: TreeNode[StructTyping],
         value: list,
-        is_little_endian: bool,
+        is_little_endian: bool = False,
+        is_length_64_bytes: bool = False,
         **options: Unpack[InternalOptions],
     ) -> Buffer:
         if not isinstance(node.data, ListDeff):
@@ -35,13 +36,12 @@ class ListEncoder(TypeEncoder):
         if not child_encoder:
             raise RuntimeError("Failed to determine the type of list element.")
 
+        len_type = InternalTypes.UINT64 if is_length_64_bytes else InternalTypes.UINT32
+
         encoded_elements = bytearray()
 
         encoded_elements.extend(
-            struct.pack(
-                InternalTypes.UINT64.get_struct_token(is_little_endian),
-                len(value),
-            )
+            struct.pack(len_type.get_struct_token(is_little_endian), len(value))
         )
 
         for ele_value in value:
@@ -57,7 +57,8 @@ class ListEncoder(TypeEncoder):
     def _decode(
         node: TreeNode[StructTyping],
         data: Buffer,
-        is_little_endian: bool,
+        is_little_endian: bool = False,
+        is_length_64_bytes: bool = False,
         **options: Unpack[InternalOptions],
     ) -> Tuple[list, int]:
         if not isinstance(node.data, ListDeff):
@@ -74,11 +75,13 @@ class ListEncoder(TypeEncoder):
         if not child_encoder:
             raise RuntimeError("Failed to determine the type of list element.")
 
+        len_type = InternalTypes.UINT64 if is_length_64_bytes else InternalTypes.UINT32
+
         (arr_len,) = struct.unpack_from(
-            InternalTypes.UINT64.get_struct_token(is_little_endian), data
+            len_type.get_struct_token(is_little_endian), data
         )
 
-        offset = InternalTypes.UINT64.get_byte_size(is_little_endian)
+        offset = len_type.get_byte_size(is_little_endian)
         arr_elements = []
 
         for _ in range(arr_len):

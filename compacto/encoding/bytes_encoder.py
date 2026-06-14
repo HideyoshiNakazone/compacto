@@ -18,16 +18,16 @@ class ByteEncoder(TypeEncoder):
     def _encode(
         node: TreeNode[StructTyping],
         value: bytes,
-        is_little_endian: bool,
+        is_little_endian: bool = False,
+        is_length_64_bytes: bool = False,
         **options: Unpack[InternalOptions],
     ) -> Buffer:
-        len_buff_size = InternalTypes.UINT64.get_byte_size(
-            is_little_endian
-        )  # the endian order is required because in some cases it can make a uint64 be only 4bytes instead of 8bytes
+        len_type = InternalTypes.UINT64 if is_length_64_bytes else InternalTypes.UINT32
+        len_buff_size = len_type.get_byte_size(is_little_endian)
 
         buf = bytearray(len_buff_size + len(value))
         struct.pack_into(
-            InternalTypes.UINT64.get_struct_token(is_little_endian), buf, 0, len(value)
+            len_type.get_struct_token(is_little_endian), buf, 0, len(value)
         )
         buf[len_buff_size:] = value
 
@@ -37,13 +37,16 @@ class ByteEncoder(TypeEncoder):
     def _decode(
         _: TreeNode[StructTyping],
         data: Buffer,
-        is_little_endian: bool,
+        is_little_endian: bool = False,
+        is_length_64_bytes: bool = False,
         **options: Unpack[InternalOptions],
     ) -> Tuple[bytes, int]:
+        len_type = InternalTypes.UINT64 if is_length_64_bytes else InternalTypes.UINT32
+        len_buff_size = len_type.get_byte_size(is_little_endian)
+
         data = memoryview(data)
         (length,) = struct.unpack_from(
-            InternalTypes.UINT64.get_struct_token(is_little_endian), data
+            len_type.get_struct_token(is_little_endian), data
         )
-        len_buff_size = InternalTypes.UINT64.get_byte_size(is_little_endian)
         data = data[len_buff_size:]
         return data[:length].tobytes(), len_buff_size + length

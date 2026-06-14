@@ -203,14 +203,16 @@ Serializes an annotated object to bytes. Returns a buffer containing a binary he
 data: bytes = pack(obj)
 data: bytes = pack(obj, is_little_endian=True)
 data: bytes = pack(obj, is_8_byte_hash=True)
+data: bytes = pack(obj, is_length_64_bytes=True)
 ```
 
 **Options:**
 
-| Option             | Type   | Default | Description                                        |
-|--------------------|--------|---------|----------------------------------------------------|
-| `is_little_endian` | `bool` | `False` | Encode payload in little-endian byte order         |
-| `is_8_byte_hash`   | `bool` | `False` | Use an 8-byte schema hash instead of 4-byte        |
+| Option                | Type   | Default | Description                                                       |
+|-----------------------|--------|---------|-------------------------------------------------------------------|
+| `is_little_endian`    | `bool` | `False` | Encode payload in little-endian byte order                        |
+| `is_8_byte_hash`      | `bool` | `False` | Use an 8-byte schema hash instead of 4-byte                       |
+| `is_length_64_bytes`  | `bool` | `False` | Use `uint64` length prefixes for `str`, `bytes`, and `list` fields |
 
 ### `unpack(clzz, data) -> T`
 
@@ -267,11 +269,11 @@ Every `pack()` call produces a buffer with this layout:
 
 ### Options flags
 
-| Bit | Hex    | Name               | Effect                                      |
-|-----|--------|--------------------|---------------------------------------------|
-| 1   | `0x02` | `IS_LITTLE_ENDIAN` | Payload encoded in little-endian byte order |
-| 2   | `0x04` | `IS_8_BYTE_HASH`   | Schema hash is 8 bytes instead of 4         |
-| 3   | `0x08` | *(reserved)*       | Reserved for future compression flag        |
+| Bit | Hex    | Name                 | Effect                                                         |
+|-----|--------|----------------------|----------------------------------------------------------------|
+| 0   | `0x01` | `IS_LITTLE_ENDIAN`   | Payload encoded in little-endian byte order                    |
+| 1   | `0x02` | `IS_8_BYTE_HASH`     | Schema hash is 8 bytes instead of 4                            |
+| 2   | `0x04` | `IS_LENGTH_64_BYTES` | Length prefixes for `str`, `bytes`, and `list` use `uint64` instead of `uint32` |
 
 ### Schema hash
 
@@ -336,8 +338,8 @@ except InvalidHeaderException as e:
 
 | Format                        | Size     |
 |-------------------------------|----------|
-| compacto (ctypes annotations) | 12 bytes |
-| compacto (default precision)  | 18 bytes |
+| compacto (ctypes annotations) | 14 bytes |
+| compacto (default precision)  | 20 bytes |
 | pickle                        | 60 bytes |
 
 > Note: pickle is not compacto's real competition — compacto targets fixed-schema, cross-language binary serialization where output size and type strictness matter. Think C structs over the wire, not Python object persistence.

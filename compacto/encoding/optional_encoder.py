@@ -16,7 +16,7 @@ class OptionalEncoder(TypeEncoder):
     def _encode(
         node: TreeNode[StructTyping],
         value: Optional[Any],
-        is_little_endian: bool,
+        is_little_endian: bool = False,
         **options: Unpack[InternalOptions],
     ) -> Buffer:
         if not isinstance(node.data, OptionalDeff):
@@ -55,7 +55,7 @@ class OptionalEncoder(TypeEncoder):
     def _decode(
         node: TreeNode[StructTyping],
         data: Buffer,
-        is_little_endian: bool,
+        is_little_endian: bool = False,
         **options: Unpack[InternalOptions],
     ) -> Tuple[Optional[Any], int]:
         if not isinstance(node.data, OptionalDeff):
