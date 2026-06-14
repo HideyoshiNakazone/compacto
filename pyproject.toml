@@ -25,6 +25,11 @@ dependencies = [
     "typing-extensions>=4.15.0",
 ]
 
+[project.urls]
+homepage = "https://github.com/HideyoshiNakazone/compacto"
+repository = "https://github.com/HideyoshiNakazone/compacto.git"
+
+
 # POE Tasks
 [tool.poe.tasks]
 create-hooks        = "bash .githooks/set-hooks.sh"
