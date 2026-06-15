@@ -157,11 +157,129 @@ unconditionally and then switch to the correct byte order for the payload.
 
 ----
 
+Parsing Tree and Traversal Order
+---------------------------------
+
+Before the first byte is encoded or decoded, compacto calls ``struct_parser``
+to build a **typing tree** from the Python class annotations.  Every encoder
+and every decoder operates on this tree — it is the single authority on both
+the schema hash (see `Header Fields`_) and the exact byte layout of the payload.
+
+Node Types
+~~~~~~~~~~
+
+Each node in the tree is one of the following types.  The children of each
+node are listed in the order they are stored; that order governs the sequence
+in which fields appear in the payload.
+
+.. list-table::
+   :header-rows: 1
+   :widths: 18 25 57
+
+   * - Node type
+     - Children (left → right)
+     - Description
+   * - ``ObjectDeff``
+     - One child per field, **in declaration order**
+     - Root node and inline-nested-struct nodes.  Children are ordered exactly
+       as :func:`typing.get_type_hints` returns them — which reflects the
+       top-to-bottom, left-to-right source order of the class body.
+   * - ``ListDeff``
+     - ``_element``
+     - Single child describing the element type ``T`` in ``list[T]``.
+   * - ``HashmapDeff``
+     - ``_key``, ``_value``
+     - Two children: child 0 is the key type ``K``, child 1 is the value type
+       ``V`` in ``dict[K, V]``.
+   * - ``OptionalDeff``
+     - ``_element``
+     - Single child describing the wrapped type ``T`` in ``Optional[T]``.
+   * - ``FieldsDeff``
+     - *(leaf — none)*
+     - Primitive ctypes field.
+   * - ``StringDeff``
+     - *(leaf — none)*
+     - ``str`` field.
+   * - ``BytesDeff``
+     - *(leaf — none)*
+     - ``bytes`` field.
+
+Declaration Order is Canonical
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+``struct_parser`` collects annotations with :func:`typing.get_type_hints`.
+In Python 3.7+, ``__annotations__`` is an ordered dict that preserves the
+**source-code declaration order** of each class body.  That order flows
+directly into the child list of every ``ObjectDeff`` node and is never
+reordered.
+
+**Consequence:** reordering fields in the class body changes the schema hash
+*and* the byte layout of every frame produced from that struct.  Encoder and
+decoder must use the identical declaration order — any divergence is detected
+by the hash check and raises :exc:`InvalidHeaderException`.
+
+Depth-First, Left-to-Right Traversal
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Both the encoder and decoder walk the typing tree **depth-first,
+left-to-right** (i.e. children are visited in insertion order).  Leaf nodes
+emit or consume bytes directly; container nodes emit or consume a
+count/presence prefix and then recurse into their child nodes:
+
+* **ObjectDeff** — no wrapper bytes; visits each child field in declaration
+  order.
+* **ListDeff** — emits/reads the element count, then visits ``_element`` once
+  per logical entry (index 0, 1, 2 …).
+* **HashmapDeff** — emits/reads the entry count, then for each entry visits
+  ``_key`` immediately followed by ``_value``.
+* **OptionalDeff** — emits/reads the 1-byte presence flag, then visits
+  ``_element`` only when the flag is ``0x01``.
+
+Example Tree
+~~~~~~~~~~~~~
+
+Given:
+
+.. code-block:: python
+
+    from dataclasses import dataclass
+
+    @dataclass
+    class Inner:
+        x: float
+        y: float
+
+    @dataclass
+    class Outer:
+        a: int
+        b: str
+        nested: Inner
+        items: list[float]
+
+``struct_parser(Outer)`` produces:
+
+.. code-block:: text
+
+    ObjectDeff("Outer")
+    ├── FieldsDeff("a")             ← encoded/decoded 1st
+    ├── StringDeff("b")             ← encoded/decoded 2nd
+    ├── ObjectDeff("nested")        ← encoded/decoded 3rd (inline, no wrapper)
+    │   ├── FieldsDeff("x")         ├── encoded/decoded 3a
+    │   └── FieldsDeff("y")         └── encoded/decoded 3b
+    └── ListDeff("items")           ← encoded/decoded 4th
+        └── FieldsDeff("_element")      element-type descriptor (applied per entry)
+
+The resulting byte stream visits fields in the order: ``a``, ``b``,
+``nested.x``, ``nested.y``, count-of-items, ``items[0]``, ``items[1]``, …
+
+----
+
 Payload Encoding
 ----------------
 
-Fields are encoded **in declaration order**, concatenated with no padding,
-alignment gaps, or separators between them.
+Fields are encoded **in declaration order** as established by the parsing
+tree (see `Parsing Tree and Traversal Order`_ above), concatenated with no
+padding, alignment gaps, or separators between them.
 
 Primitives
 ~~~~~~~~~~
@@ -404,17 +522,21 @@ Minimum steps to decode a compacto frame:
 5a. If ``options & 0x0004`` (``IS_LENGTH_64_BYTES``): length prefixes for
    ``str``, ``bytes``, ``list``, and ``dict`` fields are ``uint64`` (8 bytes).
    Otherwise they are ``uint32`` (4 bytes).
-6. Decode each field in declaration order:
+6. Decode each field following the depth-first, left-to-right traversal
+   described in `Parsing Tree and Traversal Order`_.  The canonical field
+   sequence is the **declaration order** of each class body, applied
+   recursively:
 
    * **Fixed-size primitive** — read *N* bytes and interpret as the appropriate
      integer or float type.
    * **str / bytes** — read a ``uint64`` length, then read that many bytes.
      Interpret as UTF-8 for ``str``.
    * **list[T]** — read a ``uint64`` count, then decode *count* elements of type
-     ``T`` in sequence.
+     ``T`` in sequence (left to right, index 0 first).
    * **dict[K, V]** — read a ``uint32`` (or ``uint64``) count, then decode
-     *count* key-value pairs: for each pair, decode one ``K`` followed by one
-     ``V``.
+     *count* key-value pairs: for each pair, decode one ``K`` followed
+     immediately by one ``V`` (key before value, pairs in insertion order).
    * **Optional[T]** — read 1 byte (the presence flag). If ``0x01``, decode one
      value of type ``T``. If ``0x00``, the field is ``null`` / ``None``.
-   * **Nested object** — decode its fields inline, in their own declaration order.
+   * **Nested object** — no wrapper bytes; decode its fields inline, in their
+     own declaration order, before continuing to the next field of the parent.
