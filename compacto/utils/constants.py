@@ -96,6 +96,7 @@ class InternalTypes(Enum):
     LIST = CustomType(list)
     OPTIONAL = CustomType(...)
     OBJECT = CustomType(object)
+    HASHMAP = CustomType(dict)
 
     def get_python_type(self) -> type:
         return self.value.get_python_type()

@@ -67,8 +67,14 @@ class FieldsDeff(_GenericTypeDeff):
     field_type = InternalTypes.ANY_CTYPE
 
 
+@dataclass
+class HashmapDeff(_GenericTypeDeff):
+    field_name: str
+    field_type = InternalTypes.HASHMAP
+
+
 StructTyping = Union[
-    BytesDeff, StringDeff, ListDeff, OptionalDeff, ObjectDeff, FieldsDeff
+    BytesDeff, StringDeff, ListDeff, OptionalDeff, ObjectDeff, FieldsDeff, HashmapDeff
 ]
 
 
@@ -184,6 +190,25 @@ def _parse_type(field_name: str, field_type: type) -> TreeNode[StructTyping]:
                     [
                         _parse_type(sub_field_name, sub_field_type)
                         for sub_field_name, sub_field_type in annotated_fields.items()
+                    ]
+                )
+            )
+
+        case InternalTypes.HASHMAP:
+            if len(type_metadata.args) != 2:
+                raise TypeParsingException(
+                    "hashmap requires typing for both key and value types, e.g. dict[str, int]"
+                )
+
+            return (
+                HashmapDeff(
+                    field_name=field_name,
+                )
+                .to_tree_node()
+                .extend_children(
+                    [
+                        _parse_type("_key", type_metadata.args[0]),
+                        _parse_type("_value", type_metadata.args[1]),
                     ]
                 )
             )
