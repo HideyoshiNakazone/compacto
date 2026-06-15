@@ -62,6 +62,7 @@ assert result.y == p.y
 | `str`              | Length-prefixed UTF-8                    |
 | `bytes`            | Length-prefixed raw bytes                |
 | `list[T]`          | Length-prefixed sequence of `T`          |
+| `dict[K, V]`       | Length-prefixed sequence of key-value pairs |
 | `Optional[T]`      | 1-byte presence flag + encoded `T`       |
 | Annotated class    | Recursively encoded fields in order      |
 
@@ -183,6 +184,24 @@ assert result.items == inv.items
 
 ---
 
+## Dicts
+
+`dict[K, V]` fields are serialized as a length-prefixed sequence of key-value pairs. Both `K` and `V` must be supported types — they can be primitives, strings, bytes, nested objects, or any other supported type:
+
+```python
+@dataclass
+class WordCount:
+    counts: dict[str, int]
+
+wc = WordCount({"hello": 3, "world": 7})
+data = pack(wc)
+result = unpack(WordCount, data)
+
+assert result.counts == wc.counts
+```
+
+---
+
 ## Endianness Control
 
 By default the payload is encoded in **big-endian** byte order. Pass `is_little_endian=True` to `pack()` to switch to little-endian. The header is always big-endian regardless of this setting — see [Wire Protocol](#wire-protocol) for details.
@@ -213,7 +232,7 @@ data: bytes = pack(obj, is_length_64_bytes=True)
 |-----------------------|--------|---------|-------------------------------------------------------------------|
 | `is_little_endian`    | `bool` | `False` | Encode payload in little-endian byte order                        |
 | `is_8_byte_hash`      | `bool` | `False` | Use an 8-byte schema hash instead of 4-byte                       |
-| `is_length_64_bytes`  | `bool` | `False` | Use `uint64` length prefixes for `str`, `bytes`, and `list` fields |
+| `is_length_64_bytes`  | `bool` | `False` | Use `uint64` length prefixes for `str`, `bytes`, `list`, and `dict` fields |
 
 ### `unpack(clzz, data) -> T`
 
@@ -274,7 +293,7 @@ Every `pack()` call produces a buffer with this layout:
 |-----|--------|----------------------|----------------------------------------------------------------|
 | 0   | `0x01` | `IS_LITTLE_ENDIAN`   | Payload encoded in little-endian byte order                    |
 | 1   | `0x02` | `IS_8_BYTE_HASH`     | Schema hash is 8 bytes instead of 4                            |
-| 2   | `0x04` | `IS_LENGTH_64_BYTES` | Length prefixes for `str`, `bytes`, and `list` use `uint64` instead of `uint32` |
+| 2   | `0x04` | `IS_LENGTH_64_BYTES` | Length prefixes for `str`, `bytes`, `list`, and `dict` use `uint64` instead of `uint32` |
 
 ### Schema hash
 
@@ -295,6 +314,7 @@ Fields are encoded in declaration order, concatenated with no padding or separat
 | `str`              | `uint64` length (bytes) followed by UTF-8 content            |
 | `bytes`            | `uint64` length followed by raw bytes                        |
 | `list[T]`          | `uint64` element count followed by each element encoded      |
+| `dict[K, V]`       | `uint64` entry count followed by alternating encoded K and V |
 | `Optional[T]`      | `bool` presence flag; if `True`, followed by encoded `T`     |
 | Nested object      | All fields of the nested object encoded recursively in order  |
 
@@ -330,7 +350,7 @@ except InvalidHeaderException as e:
 
 1. **Struct parsing** — compacto inspects the type annotations of your class and builds a typed tree of field definitions. Each node in the tree carries the field name, its resolved type, and its ctypes implementation where applicable.
 2. **Header construction** — a BLAKE2b hash of the typing tree is computed and written to the header alongside the protocol version and option flags.
-3. **Encoding** — each field is encoded by the appropriate encoder (`FieldEncoder` for primitives, `StringEncoder`, `ByteEncoder`, `ListEncoder`, `OptionalEncoder`, `ObjectEncoder`) and the results are concatenated in declaration order.
+3. **Encoding** — each field is encoded by the appropriate encoder (`FieldEncoder` for primitives, `StringEncoder`, `ByteEncoder`, `ListEncoder`, `HashmapEncoder`, `OptionalEncoder`, `ObjectEncoder`) and the results are concatenated in declaration order.
 4. **Decoding** — `unpack()` first reads the header, validates version and schema hash against the target class, then walks the same typing tree to decode each field at the correct byte offset.
 
 ---
@@ -393,12 +413,6 @@ uv run poe tests
 # Type checking
 uv run poe type-check
 ```
-
----
-
-## Roadmap
-
-- [ ] `Dict` — encode dicts as a array of key-value pairs with length prefix (c implementation can use [stb_ds.h](https://github.com/nothings/stb/blob/master/stb_ds.h))
 
 ---
 

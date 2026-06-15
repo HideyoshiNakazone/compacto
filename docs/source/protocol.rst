@@ -84,9 +84,10 @@ A ``uint16`` bitmask. Individual bits are defined as:
    * - 2
      - ``0x0004``
      - ``IS_LENGTH_64_BYTES``
-     - Length prefixes for ``str``, ``bytes``, and ``list`` fields are encoded
-       as ``uint64`` (8 bytes) instead of the default ``uint32`` (4 bytes).
-       Pass ``is_length_64_bytes=True`` to :func:`pack` to set this flag.
+     - Length prefixes for ``str``, ``bytes``, ``list``, and ``dict`` fields
+       are encoded as ``uint64`` (8 bytes) instead of the default ``uint32``
+       (4 bytes). Pass ``is_length_64_bytes=True`` to :func:`pack` to set this
+       flag.
    * - 3–15
      - —
      - *(reserved)*
@@ -285,6 +286,25 @@ Optionals (``Optional[T]`` / ``T | None``)
 A ``None`` value occupies exactly **1 byte** (the presence flag ``0x00``). A
 non-``None`` value occupies 1 byte plus whatever the encoded value requires.
 
+Dicts (``dict[K, V]``)
+~~~~~~~~~~~~~~~~~~~~~~
+
+.. code-block:: text
+
+    ┌─────────────────────────┬───────────────┬───────────────┬──────────────┬──────────────┬────────┐
+    │  Count  (uint32)        │  Key 0        │  Value 0      │  Key 1       │  Value 1     │  …     │
+    │  4 bytes                │  (variable)   │  (variable)   │  (variable)  │  (variable)  │        │
+    └─────────────────────────┴───────────────┴───────────────┴──────────────┴──────────────┴────────┘
+
+1. A ``uint32`` entry count is written (``uint64`` when ``IS_LENGTH_64_BYTES`` is set).
+2. For each entry, the key is encoded using the encoder for type ``K``, followed
+   immediately by the value encoded using the encoder for type ``V``.
+
+There is no entry separator; offsets are derived by decoding each key-value pair
+in sequence. Both ``K`` and ``V`` may be any supported type, including nested
+objects or other variable-length types. The count prefix respects the
+``IS_LITTLE_ENDIAN`` flag.
+
 Nested Objects
 ~~~~~~~~~~~~~~
 
@@ -382,8 +402,8 @@ Minimum steps to decode a compacto frame:
 5. If ``options & 0x0001`` (``IS_LITTLE_ENDIAN``): decode payload fields as
    little-endian. Otherwise use big-endian.
 5a. If ``options & 0x0004`` (``IS_LENGTH_64_BYTES``): length prefixes for
-   ``str``, ``bytes``, and ``list`` fields are ``uint64`` (8 bytes). Otherwise
-   they are ``uint32`` (4 bytes).
+   ``str``, ``bytes``, ``list``, and ``dict`` fields are ``uint64`` (8 bytes).
+   Otherwise they are ``uint32`` (4 bytes).
 6. Decode each field in declaration order:
 
    * **Fixed-size primitive** — read *N* bytes and interpret as the appropriate
@@ -392,6 +412,9 @@ Minimum steps to decode a compacto frame:
      Interpret as UTF-8 for ``str``.
    * **list[T]** — read a ``uint64`` count, then decode *count* elements of type
      ``T`` in sequence.
+   * **dict[K, V]** — read a ``uint32`` (or ``uint64``) count, then decode
+     *count* key-value pairs: for each pair, decode one ``K`` followed by one
+     ``V``.
    * **Optional[T]** — read 1 byte (the presence flag). If ``0x01``, decode one
      value of type ``T``. If ``0x00``, the field is ``null`` / ``None``.
    * **Nested object** — decode its fields inline, in their own declaration order.

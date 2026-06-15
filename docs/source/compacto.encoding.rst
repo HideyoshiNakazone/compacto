@@ -20,6 +20,14 @@ compacto.encoding.field\_encoder module
    :undoc-members:
    :show-inheritance:
 
+compacto.encoding.hashmap\_encoder module
+-----------------------------------------
+
+.. automodule:: compacto.encoding.hashmap_encoder
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 compacto.encoding.list\_encoder module
 --------------------------------------
 
