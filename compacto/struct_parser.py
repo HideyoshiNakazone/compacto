@@ -15,6 +15,7 @@ from typing_extensions import (
 
 import ctypes
 from dataclasses import dataclass
+from types import GenericAlias
 
 
 T = TypeVar("T", bound=HasAnnotations)
@@ -225,5 +226,9 @@ def _parse_type(field_name: str, field_type: type) -> TreeNode[StructTyping]:
 
 
 def struct_parser(obj_or_clzz: T | type[T]) -> TreeNode[StructTyping]:
-    clzz = obj_or_clzz if isinstance(obj_or_clzz, type) else type(obj_or_clzz)
+    clzz = (
+        obj_or_clzz
+        if isinstance(obj_or_clzz, (type, GenericAlias))
+        else type(obj_or_clzz)
+    )
     return _parse_type(clzz.__name__, clzz)
