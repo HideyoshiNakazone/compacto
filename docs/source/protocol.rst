@@ -347,45 +347,49 @@ Strings (``str``)
 
 .. code-block:: text
 
-    ┌─────────────────────────┬────────────────────────────┐
-    │   Length  (uint64)      │  UTF-8 encoded content     │
-    │   8 bytes               │  <Length> bytes            │
-    └─────────────────────────┴────────────────────────────┘
+    ┌──────────────────────────────┬────────────────────────────┐
+    │   Length  (uint32 or uint64) │  UTF-8 encoded content     │
+    │   4 or 8 bytes               │  <Length> bytes            │
+    └──────────────────────────────┴────────────────────────────┘
 
 1. The string is encoded to UTF-8.
-2. A ``uint64`` length (number of **bytes**, not characters) is written.
+2. A length prefix (number of **bytes**, not characters) is written: ``uint32``
+   (4 bytes) by default, or ``uint64`` (8 bytes) when ``IS_LENGTH_64_BYTES`` is
+   set.
 3. The UTF-8 bytes follow immediately.
 
-The ``uint64`` length respects the ``IS_LITTLE_ENDIAN`` flag.
+The length prefix respects the ``IS_LITTLE_ENDIAN`` flag.
 
 Bytes (``bytes``)
 ~~~~~~~~~~~~~~~~~
 
 Identical structure to ``str``, but no text encoding step — the raw bytes are
-written after the ``uint64`` length.
+written after the length prefix (``uint32`` by default, ``uint64`` when
+``IS_LENGTH_64_BYTES`` is set).
 
 .. code-block:: text
 
-    ┌─────────────────────────┬──────────────────────────┐
-    │   Length  (uint64)      │  Raw bytes               │
-    │   8 bytes               │  <Length> bytes          │
-    └─────────────────────────┴──────────────────────────┘
+    ┌──────────────────────────────┬──────────────────────────┐
+    │   Length  (uint32 or uint64) │  Raw bytes               │
+    │   4 or 8 bytes               │  <Length> bytes          │
+    └──────────────────────────────┴──────────────────────────┘
 
 Lists (``list[T]``)
 ~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: text
 
-    ┌─────────────────────────┬──────────────┬─────────────┬────────┐
-    │  Count  (uint64)        │  Element 0   │  Element 1  │  …     │
-    │  8 bytes                │  (variable)  │  (variable) │        │
-    └─────────────────────────┴──────────────┴─────────────┴────────┘
+    ┌──────────────────────────────┬──────────────┬─────────────┬────────┐
+    │  Count  (uint32 or uint64)   │  Element 0   │  Element 1  │  …     │
+    │  4 or 8 bytes                │  (variable)  │  (variable) │        │
+    └──────────────────────────────┴──────────────┴─────────────┴────────┘
 
-1. A ``uint64`` element count is written.
+1. An element count is written: ``uint32`` (4 bytes) by default, or ``uint64``
+   (8 bytes) when ``IS_LENGTH_64_BYTES`` is set.
 2. Each element is encoded using the encoder for its type ``T``.
 
 There is no element-separator; offsets are derived by decoding each element
-in sequence. The ``uint64`` count respects the ``IS_LITTLE_ENDIAN`` flag.
+in sequence. The count prefix respects the ``IS_LITTLE_ENDIAN`` flag.
 
 Optionals (``Optional[T]`` / ``T | None``)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -409,10 +413,10 @@ Dicts (``dict[K, V]``)
 
 .. code-block:: text
 
-    ┌─────────────────────────┬───────────────┬───────────────┬──────────────┬──────────────┬────────┐
-    │  Count  (uint32)        │  Key 0        │  Value 0      │  Key 1       │  Value 1     │  …     │
-    │  4 bytes                │  (variable)   │  (variable)   │  (variable)  │  (variable)  │        │
-    └─────────────────────────┴───────────────┴───────────────┴──────────────┴──────────────┴────────┘
+    ┌──────────────────────────────┬───────────────┬───────────────┬──────────────┬──────────────┬────────┐
+    │  Count  (uint32 or uint64)   │  Key 0        │  Value 0      │  Key 1       │  Value 1     │  …     │
+    │  4 or 8 bytes                │  (variable)   │  (variable)   │  (variable)  │  (variable)  │        │
+    └──────────────────────────────┴───────────────┴───────────────┴──────────────┴──────────────┴────────┘
 
 1. A ``uint32`` entry count is written (``uint64`` when ``IS_LENGTH_64_BYTES`` is set).
 2. For each entry, the key is encoded using the encoder for type ``K``, followed
@@ -529,13 +533,16 @@ Minimum steps to decode a compacto frame:
 
    * **Fixed-size primitive** — read *N* bytes and interpret as the appropriate
      integer or float type.
-   * **str / bytes** — read a ``uint64`` length, then read that many bytes.
-     Interpret as UTF-8 for ``str``.
-   * **list[T]** — read a ``uint64`` count, then decode *count* elements of type
-     ``T`` in sequence (left to right, index 0 first).
-   * **dict[K, V]** — read a ``uint32`` (or ``uint64``) count, then decode
-     *count* key-value pairs: for each pair, decode one ``K`` followed
-     immediately by one ``V`` (key before value, pairs in insertion order).
+   * **str / bytes** — read a ``uint32`` length (or ``uint64`` if
+     ``IS_LENGTH_64_BYTES``), then read that many bytes. Interpret as UTF-8 for
+     ``str``.
+   * **list[T]** — read a ``uint32`` count (or ``uint64`` if
+     ``IS_LENGTH_64_BYTES``), then decode *count* elements of type ``T`` in
+     sequence (left to right, index 0 first).
+   * **dict[K, V]** — read a ``uint32`` count (or ``uint64`` if
+     ``IS_LENGTH_64_BYTES``), then decode *count* key-value pairs: for each
+     pair, decode one ``K`` followed immediately by one ``V`` (key before
+     value, pairs in insertion order).
    * **Optional[T]** — read 1 byte (the presence flag). If ``0x01``, decode one
      value of type ``T``. If ``0x00``, the field is ``null`` / ``None``.
    * **Nested object** — no wrapper bytes; decode its fields inline, in their
