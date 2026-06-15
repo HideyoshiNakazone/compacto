@@ -12,7 +12,7 @@
 
 **compacto** turns Python objects into compact binary data and back, using type annotations to drive the encoding/decoding process — no schemas, no decorators, just plain annotated classes.
 
-It leverages Python's `struct` module for fixed-size primitive types. All fields must be fully annotated and use supported types — unsupported types raise a `TypeError` at encode time, keeping the output strictly cross-language compatible.
+It leverages Python's `struct` module for fixed-size primitive types. All fields must be fully annotated and use supported types — unsupported types raise a `TypeError` at encode time, keeping the output designed for cross-language compatible.
 
 ---
 
@@ -311,14 +311,16 @@ Fields are encoded in declaration order, concatenated with no padding or separat
 | Type               | Encoding                                                      |
 |--------------------|---------------------------------------------------------------|
 | Primitive (`int`, `float`, `bool`, ctypes variants) | `struct.pack` with the field's format token |
-| `str`              | `uint64` length (bytes) followed by UTF-8 content            |
-| `bytes`            | `uint64` length followed by raw bytes                        |
-| `list[T]`          | `uint64` element count followed by each element encoded      |
-| `dict[K, V]`       | `uint64` entry count followed by alternating encoded K and V |
+| `str`              | `uint32` length (bytes) followed by UTF-8 content            |
+| `bytes`            | `uint32` length followed by raw bytes                        |
+| `list[T]`          | `uint32` element count followed by each element encoded      |
+| `dict[K, V]`       | `uint32` entry count followed by alternating encoded K and V |
 | `Optional[T]`      | `bool` presence flag; if `True`, followed by encoded `T`     |
 | Nested object      | All fields of the nested object encoded recursively in order  |
 
-The `uint64` length fields for `str`, `bytes`, and `list` respect the `IS_LITTLE_ENDIAN` flag.
+> **Note:** The length prefix for `str`, `bytes`, `list`, and `dict` is `uint32` (4 bytes) by default. Set the `IS_LENGTH_64_BYTES` option flag (pass `is_length_64_bytes=True` to `pack()`) to use `uint64` (8 bytes) instead.
+
+The length fields for `str`, `bytes`, `list`, and `dict` respect the `IS_LITTLE_ENDIAN` flag.
 
 ---
 
