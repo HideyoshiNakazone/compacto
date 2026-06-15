@@ -15,6 +15,7 @@ from typing_extensions import (
 
 import ctypes
 from dataclasses import dataclass
+from types import GenericAlias
 
 
 T = TypeVar("T", bound=HasAnnotations)
@@ -67,8 +68,14 @@ class FieldsDeff(_GenericTypeDeff):
     field_type = InternalTypes.ANY_CTYPE
 
 
+@dataclass
+class HashmapDeff(_GenericTypeDeff):
+    field_name: str
+    field_type = InternalTypes.HASHMAP
+
+
 StructTyping = Union[
-    BytesDeff, StringDeff, ListDeff, OptionalDeff, ObjectDeff, FieldsDeff
+    BytesDeff, StringDeff, ListDeff, OptionalDeff, ObjectDeff, FieldsDeff, HashmapDeff
 ]
 
 
@@ -188,6 +195,25 @@ def _parse_type(field_name: str, field_type: type) -> TreeNode[StructTyping]:
                 )
             )
 
+        case InternalTypes.HASHMAP:
+            if len(type_metadata.args) != 2:
+                raise TypeParsingException(
+                    "hashmap requires typing for both key and value types, e.g. dict[str, int]"
+                )
+
+            return (
+                HashmapDeff(
+                    field_name=field_name,
+                )
+                .to_tree_node()
+                .extend_children(
+                    [
+                        _parse_type("_key", type_metadata.args[0]),
+                        _parse_type("_value", type_metadata.args[1]),
+                    ]
+                )
+            )
+
         case _ if isinstance(internal_type.value, Ctype):
             return FieldsDeff(
                 field_name=field_name, field_impl=internal_type.value
@@ -200,5 +226,9 @@ def _parse_type(field_name: str, field_type: type) -> TreeNode[StructTyping]:
 
 
 def struct_parser(obj_or_clzz: T | type[T]) -> TreeNode[StructTyping]:
-    clzz = obj_or_clzz if isinstance(obj_or_clzz, type) else type(obj_or_clzz)
+    clzz = (
+        obj_or_clzz
+        if isinstance(obj_or_clzz, (type, GenericAlias))
+        else type(obj_or_clzz)
+    )
     return _parse_type(clzz.__name__, clzz)

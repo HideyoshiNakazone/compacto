@@ -1,6 +1,7 @@
 from compacto.struct_parser import (
     BytesDeff,
     FieldsDeff,
+    HashmapDeff,
     ListDeff,
     ObjectDeff,
     OptionalDeff,
@@ -88,3 +89,18 @@ def test_struct_parser_annotated_with_instance_raises() -> None:
 
     with pytest.raises(TypeParsingException, match="a instance is not accepted"):
         struct_parser(BadAnnotation)
+
+
+def test_struct_parser_dict() -> None:
+    @dataclass
+    class WithDict:
+        mapping: dict[str, int]
+
+    typing_tree = struct_parser(WithDict)
+
+    assert isinstance(typing_tree.data, ObjectDeff)
+
+    field_tree = typing_tree.children[0]
+
+    assert isinstance(field_tree.data, HashmapDeff)
+    assert len(field_tree.children) == 2
